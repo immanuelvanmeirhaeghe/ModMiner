@@ -47,7 +47,7 @@ namespace ModMiner
 
         private void Update()
         {
-            if (Input.GetKeyDown(KeyCode.Home))
+            if (IsLocalOrHost && Input.GetKeyDown(KeyCode.Home))
             {
                 if (!showUI)
                 {
@@ -86,7 +86,7 @@ namespace ModMiner
 
         private void InitModUI()
         {
-            GUI.Box(new Rect(10f, 10f, 450f, 150f), "ModMiner UI", GUI.skin.window);
+            GUI.Box(new Rect(10f, 10f, 450f, 150f), "ModMiner UI - Press HOME to open/close", GUI.skin.window);
 
             GUI.Label(new Rect(30f, 30f, 200f, 20f), "How many ores per type?: ", GUI.skin.label);
             m_CountStack = GUI.TextField(new Rect(250f, 30f, 20f, 20f), m_CountStack, GUI.skin.textField);
