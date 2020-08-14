@@ -20,19 +20,23 @@ namespace ModMiner
 
         private static Player player;
 
-        public bool IsModMinerActive = false;
-
         private static string m_CountStack = "1";
         private static string m_CountCharcoal = "1";
         private static string m_CountStone = "1";
         private static string m_CountObsidian = "1";
         private static string m_CountIron = "1";
 
+        public bool IsLocalOrHost => ReplTools.AmIMaster();
+
         /// <summary>
-        /// ModAPI required security check to enable this mod feature.
+        /// ModAPI required security check to enable this mod feature for multiplayer.
+        /// See <see cref="ModManager"/> for implementation.
+        /// Based on request in chat: use  !requestMods in chat as client to request the host to activate mods for them.
         /// </summary>
-        /// <returns></returns>
-        public bool IsLocalOrHost => ReplTools.AmIMaster() || !ReplTools.IsCoopEnabled();
+        /// <returns>true if enabled, else false</returns>
+        public bool IsModMinerActiveForMultiplayer => ModManager.AllowModsForMultiplayer;
+
+        public bool IsModMinerActive = false;
 
         public ModMiner()
         {
@@ -47,7 +51,7 @@ namespace ModMiner
 
         private void Update()
         {
-            if (IsLocalOrHost && Input.GetKeyDown(KeyCode.Home))
+            if ((IsLocalOrHost || IsModMinerActiveForMultiplayer) && Input.GetKeyDown(KeyCode.Home))
             {
                 if (!showUI)
                 {

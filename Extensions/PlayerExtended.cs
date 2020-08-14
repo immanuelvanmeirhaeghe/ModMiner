@@ -11,6 +11,7 @@ namespace ModMiner
         {
             base.Start();
             new GameObject("__ModMiner__").AddComponent<ModMiner>();
+            new GameObject("__ModManager__").AddComponent<ModManager>();
         }
     }
 }

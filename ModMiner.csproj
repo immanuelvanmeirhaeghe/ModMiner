@@ -342,6 +342,9 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Extensions\HUDTextChatHistoryExtended.cs" />
+    <Compile Include="ModManager.cs" />
+    <Compile Include="Extensions\HUDTextChatExtended.cs" />
     <Compile Include="Extensions\PlayerExtended.cs" />
     <Compile Include="ModMiner.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
