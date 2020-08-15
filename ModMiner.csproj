@@ -22,8 +22,6 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-  </ItemGroup>
-  <ItemGroup>
     <Reference Include="BaseModLib">
       <HintPath>../../../libs/BaseModLib.dll</HintPath>
       <Private>False</Private>
@@ -55,6 +53,9 @@
     <Reference Include="EasyRagdollCreatorLib">
       <HintPath>../../../modlib/GH/GH_data/Managed/EasyRagdollCreatorLib.dll</HintPath>
       <Private>False</Private>
+    </Reference>
+    <Reference Include="ModManager">
+      <HintPath>Libs\ModManager.dll</HintPath>
     </Reference>
     <Reference Include="Mono.Posix">
       <HintPath>../../../modlib/GH/GH_data/Managed/Mono.Posix.dll</HintPath>
@@ -342,9 +343,6 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Extensions\HUDTextChatHistoryExtended.cs" />
-    <Compile Include="ModManager.cs" />
-    <Compile Include="Extensions\HUDTextChatExtended.cs" />
     <Compile Include="Extensions\PlayerExtended.cs" />
     <Compile Include="ModMiner.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

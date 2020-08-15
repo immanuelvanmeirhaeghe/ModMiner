@@ -1,8 +1,6 @@
 ﻿using Enums;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+using ModManager;
 using UnityEngine;
 
 namespace ModMiner
@@ -34,7 +32,7 @@ namespace ModMiner
         /// Based on request in chat: use  !requestMods in chat as client to request the host to activate mods for them.
         /// </summary>
         /// <returns>true if enabled, else false</returns>
-        public bool IsModMinerActiveForMultiplayer => ModManager.AllowModsForMultiplayer;
+        public bool IsModMinerActiveForMultiplayer => ModManager.ModManager.AllowModsForMultiplayer;
 
         public bool IsModMinerActive = false;
 
