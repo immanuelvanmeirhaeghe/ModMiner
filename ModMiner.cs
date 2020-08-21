@@ -5,9 +5,11 @@ using UnityEngine;
 namespace ModMiner
 {
     /// <summary>
-    /// ModMiner
+    /// ModMiner is a mod for Green Hell
+    /// that allows a player to spawn charcoal, stones, obsidian, iron and gold sacks.
+    /// The ores will be added to the player inventory.
     /// </summary>
-    class ModMiner : MonoBehaviour
+    public class ModMiner : MonoBehaviour
     {
         private static ModMiner s_Instance;
 
@@ -23,8 +25,6 @@ namespace ModMiner
         private static string m_CountObsidian = "1";
         private static string m_CountIron = "1";
 
-        public bool IsLocalOrHost => ReplTools.AmIMaster();
-
         /// <summary>
         /// ModAPI required security check to enable this mod feature for multiplayer.
         /// See <see cref="ModManager"/> for implementation.
@@ -32,12 +32,10 @@ namespace ModMiner
         /// </summary>
         /// <returns>true if enabled, else false</returns>
         public bool IsModActiveForMultiplayer => FindObjectOfType(typeof(ModManager.ModManager)) != null ? ModManager.ModManager.AllowModsForMultiplayer : false;
-
-        public bool IsModMinerActive = false;
+        public bool IsModActiveForSingleplayer => ReplTools.AmIMaster();
 
         public ModMiner()
         {
-            IsModMinerActive = true;
             s_Instance = this;
         }
 
@@ -46,16 +44,53 @@ namespace ModMiner
             return s_Instance;
         }
 
+        public static void ShowHUDBigInfo(string text, string header, string textureName)
+        {
+            HUDManager hUDManager = HUDManager.Get();
+
+            HUDBigInfo hudBigInfo = (HUDBigInfo)hUDManager.GetHUD(typeof(HUDBigInfo));
+            HUDBigInfoData hudBigInfoData = new HUDBigInfoData
+            {
+                m_Header = header,
+                m_Text = text,
+                m_TextureName = textureName,
+                m_ShowTime = Time.time
+            };
+            hudBigInfo.AddInfo(hudBigInfoData);
+            hudBigInfo.Show(true);
+        }
+
+        private static void InitSkinUI()
+        {
+            GUI.skin = ModAPI.Interface.Skin;
+        }
+
+        private static void EnableCursor(bool enabled = false)
+        {
+            CursorManager.Get().ShowCursor(enabled, false);
+            player = Player.Get();
+
+            if (enabled)
+            {
+                player.BlockMoves();
+                player.BlockRotation();
+                player.BlockInspection();
+            }
+            else
+            {
+                player.UnblockMoves();
+                player.UnblockRotation();
+                player.UnblockInspection();
+            }
+        }
+
         private void Update()
         {
-            if ((IsLocalOrHost || IsModActiveForMultiplayer) && Input.GetKeyDown(KeyCode.Home))
+            if (Input.GetKeyDown(KeyCode.Home))
             {
                 if (!showUI)
                 {
-                    itemsManager = ItemsManager.Get();
-
-                    player = Player.Get();
-
+                    InitData();
                     EnableCursor(true);
                 }
                 // toggle menu
@@ -142,7 +177,7 @@ namespace ModMiner
             }
         }
 
-        public static void OnClickGetStackButton()
+        private static void OnClickGetStackButton()
         {
             try
             {
@@ -157,7 +192,7 @@ namespace ModMiner
             }
         }
 
-        public static void OnClickGetGoldButton()
+        private static void OnClickGetGoldButton()
         {
             try
             {
@@ -169,7 +204,7 @@ namespace ModMiner
             }
         }
 
-        public static void OnClickGetCharcoalButton()
+        private static void OnClickGetCharcoalButton()
         {
             try
             {
@@ -181,7 +216,7 @@ namespace ModMiner
             }
         }
 
-        public static void OnClickGetStoneButton()
+        private static void OnClickGetStoneButton()
         {
             try
             {
@@ -193,7 +228,7 @@ namespace ModMiner
             }
         }
 
-        public static void OnClickGetObsidianButton()
+        private static void OnClickGetObsidianButton()
         {
             try
             {
@@ -205,7 +240,7 @@ namespace ModMiner
             }
         }
 
-        public static void OnClickGetIronButton()
+        private static void OnClickGetIronButton()
         {
             try
             {
@@ -217,7 +252,7 @@ namespace ModMiner
             }
         }
 
-        public static void OnClickGetDynamiteButton()
+        private static void OnClickGetDynamiteButton()
         {
             try
             {
@@ -240,7 +275,7 @@ namespace ModMiner
                     player.AddItemToInventory(ItemID.moneybag.ToString());
                 }
 
-                ShowHUDBigInfo($"Added {count} x Gold sack to inventory", "Mod Miner Info", HUDInfoLogTextureType.Count.ToString());
+                ShowHUDBigInfo($"Added {count} x {itemsManager.GetInfo(ItemID.moneybag).GetNameToDisplayLocalized()}  to inventory", "ModMiner Info", HUDInfoLogTextureType.Count.ToString());
             }
             catch (Exception exc)
             {
@@ -279,7 +314,7 @@ namespace ModMiner
                     player.AddItemToInventory(ItemID.iron_ore_stone.ToString());
                 }
 
-                ShowHUDBigInfo($"Added {count} x {itemsManager.GetInfo(ItemID.iron_ore_stone).GetNameToDisplayLocalized()} to inventory", "Mod Miner Info", HUDInfoLogTextureType.Count.ToString());
+                ShowHUDBigInfo($"Added {count} x {itemsManager.GetInfo(ItemID.iron_ore_stone).GetNameToDisplayLocalized()} to inventory", "ModMiner Info", HUDInfoLogTextureType.Count.ToString());
             }
             catch (Exception exc)
             {
@@ -317,7 +352,7 @@ namespace ModMiner
                     player.AddItemToInventory(ItemID.Stone.ToString());
                 }
 
-                ShowHUDBigInfo($"Added {count} x {itemsManager.GetInfo(ItemID.Stone).GetNameToDisplayLocalized()} to inventory", "Mod Miner Info", HUDInfoLogTextureType.Count.ToString());
+                ShowHUDBigInfo($"Added {count} x {itemsManager.GetInfo(ItemID.Stone).GetNameToDisplayLocalized()} to inventory", "ModMiner Info", HUDInfoLogTextureType.Count.ToString());
             }
             catch (Exception exc)
             {
@@ -336,51 +371,11 @@ namespace ModMiner
                     player.AddItemToInventory(ItemID.Charcoal.ToString());
                 }
 
-                ShowHUDBigInfo($"Added {count} x {itemsManager.GetInfo(ItemID.Charcoal).GetNameToDisplayLocalized()} to inventory", "Mod Miner Info", HUDInfoLogTextureType.Count.ToString());
+                ShowHUDBigInfo($"Added {count} x {itemsManager.GetInfo(ItemID.Charcoal).GetNameToDisplayLocalized()} to inventory", "ModMiner Info", HUDInfoLogTextureType.Count.ToString());
             }
             catch (Exception exc)
             {
                 ModAPI.Log.Write($"[{nameof(ModMiner)}.{nameof(ModMiner)}:{nameof(AddCharcoalToInventory)}] throws exception: {exc.Message}");
-            }
-        }
-
-        public static void ShowHUDBigInfo(string text, string header, string textureName)
-        {
-            HUDManager hUDManager = HUDManager.Get();
-
-            HUDBigInfo hudBigInfo = (HUDBigInfo)hUDManager.GetHUD(typeof(HUDBigInfo));
-            HUDBigInfoData hudBigInfoData = new HUDBigInfoData
-            {
-                m_Header = header,
-                m_Text = text,
-                m_TextureName = textureName,
-                m_ShowTime = Time.time
-            };
-            hudBigInfo.AddInfo(hudBigInfoData);
-            hudBigInfo.Show(true);
-        }
-
-        private static void InitSkinUI()
-        {
-            GUI.skin = ModAPI.Interface.Skin;
-        }
-
-        private static void EnableCursor(bool enabled = false)
-        {
-            CursorManager.Get().ShowCursor(enabled, false);
-            player = Player.Get();
-
-            if (enabled)
-            {
-                player.BlockMoves();
-                player.BlockRotation();
-                player.BlockInspection();
-            }
-            else
-            {
-                player.UnblockMoves();
-                player.UnblockRotation();
-                player.UnblockInspection();
             }
         }
     }

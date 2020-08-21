@@ -6,7 +6,7 @@ using System.Runtime.InteropServices;
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
 [assembly: AssemblyTitle("ModAPI.ModMiner")]
-[assembly: AssemblyDescription("ModMiner is a mod for Green Hell, which allows a player to spawn charcoal, stones, obsidian, iron and gold sacks. The ores will be added to the player inventory. Press Home to open the mod UI. Enter the number of ores per type and click the button.")]
+[assembly: AssemblyDescription("ModMiner is a mod for Green Hell that allows a player to spawn charcoal, stones, obsidian, iron and gold sacks. The ores will be added to the player inventory.")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Dragon Legion")]
 [assembly: AssemblyProduct("ModAPI.ModMiner")]

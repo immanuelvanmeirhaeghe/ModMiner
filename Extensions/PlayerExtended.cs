@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-namespace ModMiner.Extensions
+namespace ModMiner
 {
     /// <summary>
     /// Inject modding interface into game only in single player mode

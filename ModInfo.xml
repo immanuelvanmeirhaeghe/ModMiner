@@ -4,7 +4,7 @@
     <EN>ModMiner</EN>
   </Name>
   <Description>
-    <EN>ModMiner is a mod for Green Hell, which allows a player to spawn charcoal, stones, obsidian, iron and gold sacks. The ores will be added to the player inventory. Press Home to open the mod UI. Enter the number of ores per type and click the button.</EN>
+    <EN>ModMiner is a mod for Green Hell that allows a player to spawn charcoal, stones, obsidian, iron and gold sacks. The ores will be added to the player inventory.</EN>
   </Description>
-  <Version>1.0.2.0</Version>
+  <Version>1.0.2.1</Version>
 </Mod>
