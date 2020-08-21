@@ -8,6 +8,7 @@ namespace ModMiner
     /// ModMiner is a mod for Green Hell
     /// that allows a player to spawn charcoal, stones, obsidian, iron and gold sacks.
     /// The ores will be added to the player inventory.
+	/// Enable the mod UI by pressing Home.
     /// </summary>
     public class ModMiner : MonoBehaviour
     {
@@ -107,6 +108,7 @@ namespace ModMiner
             if (showUI)
             {
                 InitData();
+                InitSkinUI();
                 InitModUI();
             }
         }
@@ -114,10 +116,7 @@ namespace ModMiner
         private static void InitData()
         {
             itemsManager = ItemsManager.Get();
-
             player = Player.Get();
-
-            InitSkinUI();
         }
 
         private void InitModUI()
@@ -172,6 +171,12 @@ namespace ModMiner
             if (GUI.Button(new Rect(280f, 130f, 150f, 20f), "Get iron", GUI.skin.button))
             {
                 OnClickGetIronButton();
+                showUI = false;
+                EnableCursor(false);
+            }
+
+            if (GUI.Button(new Rect(280f, 150f, 150f, 20f), "CANCEL", GUI.skin.button))
+            {
                 showUI = false;
                 EnableCursor(false);
             }
