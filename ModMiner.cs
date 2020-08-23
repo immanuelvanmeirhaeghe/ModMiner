@@ -122,8 +122,13 @@ namespace ModMiner
         private void InitModUI()
         {
             GUI.Box(new Rect(10f, 10f, 450f, 150f), "ModMiner UI - Press HOME to open/close", GUI.skin.window);
+            if (GUI.Button(new Rect(10f, 430f, 150f, 20f), "X", GUI.skin.button))
+            {
+                showUI = false;
+                EnableCursor(false);
+            }
 
-            GUI.Label(new Rect(30f, 30f, 200f, 20f), "How many ores per type?: ", GUI.skin.label);
+            GUI.Label(new Rect(30f, 30f, 200f, 20f), "How many ores per type: ", GUI.skin.label);
             m_CountStack = GUI.TextField(new Rect(250f, 30f, 20f, 20f), m_CountStack, GUI.skin.textField);
             if (GUI.Button(new Rect(280f, 30f, 150f, 20f), "Get ore stack", GUI.skin.button))
             {
@@ -171,12 +176,6 @@ namespace ModMiner
             if (GUI.Button(new Rect(280f, 130f, 150f, 20f), "Get iron", GUI.skin.button))
             {
                 OnClickGetIronButton();
-                showUI = false;
-                EnableCursor(false);
-            }
-
-            if (GUI.Button(new Rect(280f, 150f, 150f, 20f), "CANCEL", GUI.skin.button))
-            {
                 showUI = false;
                 EnableCursor(false);
             }
