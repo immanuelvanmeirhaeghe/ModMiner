@@ -1,5 +1,6 @@
 ﻿using Enums;
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace ModMiner
@@ -16,8 +17,14 @@ namespace ModMiner
 
         private bool showUI = false;
 
-        private static ItemsManager itemsManager;
+        public static List<ItemID> ItemIdsToUnlock { get; set; } = new List<ItemID> { ItemID.moneybag, ItemID.iron_ore_stone, ItemID.Obsidian_Stone, ItemID.Stone, ItemID.Charcoal };
 
+        private bool m_ItemsUnlocked = false;
+
+        public Rect ModMinerScreen = new Rect(10f, 10f, 450f, 150f);
+
+        private static ItemsManager itemsManager;
+        private static HUDManager hUDManager;
         private static Player player;
 
         private static string m_CountStack = "1";
@@ -26,17 +33,23 @@ namespace ModMiner
         private static string m_CountObsidian = "1";
         private static string m_CountIron = "1";
 
-        /// <summary>
-        /// ModAPI required security check to enable this mod feature for multiplayer.
-        /// See <see cref="ModManager"/> for implementation.
-        /// Based on request in chat: use  !requestMods in chat as client to request the host to activate mods for them.
-        /// </summary>
-        /// <returns>true if enabled, else false</returns>
-        public bool IsModActiveForMultiplayer => FindObjectOfType(typeof(ModManager.ModManager)) != null ? ModManager.ModManager.AllowModsForMultiplayer : false;
-        public bool IsModActiveForSingleplayer => ReplTools.AmIMaster();
+        private bool _isActiveForMultiplayer;
+        public bool IsModActiveForMultiplayer
+        {
+            get => _isActiveForMultiplayer;
+            set => _isActiveForMultiplayer = FindObjectOfType(typeof(ModManager.ModManager)) != null && ModManager.ModManager.AllowModsForMultiplayer;
+        }
+
+        private bool _isActiveForSingleplayer;
+        public bool IsModActiveForSingleplayer
+        {
+            get => _isActiveForSingleplayer;
+            set => _isActiveForSingleplayer = ReplTools.AmIMaster();
+        }
 
         public ModMiner()
         {
+            useGUILayout = true;
             s_Instance = this;
         }
 
@@ -45,10 +58,8 @@ namespace ModMiner
             return s_Instance;
         }
 
-        public static void ShowHUDBigInfo(string text, string header, string textureName)
+        public void ShowHUDBigInfo(string text, string header, string textureName)
         {
-            HUDManager hUDManager = HUDManager.Get();
-
             HUDBigInfo hudBigInfo = (HUDBigInfo)hUDManager.GetHUD(typeof(HUDBigInfo));
             HUDBigInfoData hudBigInfoData = new HUDBigInfoData
             {
@@ -61,17 +72,16 @@ namespace ModMiner
             hudBigInfo.Show(true);
         }
 
-        private static void InitSkinUI()
+        private void InitSkinUI()
         {
             GUI.skin = ModAPI.Interface.Skin;
         }
 
-        private static void EnableCursor(bool enabled = false)
+        private void EnableCursor(bool blockPlayer = false)
         {
-            CursorManager.Get().ShowCursor(enabled, false);
-            player = Player.Get();
+            CursorManager.Get().ShowCursor(blockPlayer, false);
 
-            if (enabled)
+            if (blockPlayer)
             {
                 player.BlockMoves();
                 player.BlockRotation();
@@ -94,7 +104,6 @@ namespace ModMiner
                     InitData();
                     EnableCursor(true);
                 }
-                // toggle menu
                 showUI = !showUI;
                 if (!showUI)
                 {
@@ -109,23 +118,43 @@ namespace ModMiner
             {
                 InitData();
                 InitSkinUI();
-                InitModUI();
+                InitWindow();
             }
         }
 
-        private static void InitData()
+        private void UnlockItemInfos()
+        {
+            foreach (ItemID itemID in ItemIdsToUnlock)
+            {
+                itemsManager.UnlockItemInNotepad(itemID);
+                itemsManager.UnlockItemInfo(itemID.ToString());
+            }
+            m_ItemsUnlocked = true;
+        }
+
+        private void InitWindow()
+        {
+            int wid = GetHashCode();
+            ModMinerScreen = GUI.Window(wid, ModMinerScreen, InitModMinerScreen, $"{nameof(ModMiner)}");
+        }
+
+        private void InitData()
         {
             itemsManager = ItemsManager.Get();
             player = Player.Get();
+            hUDManager = HUDManager.Get();
+
+            if (!m_ItemsUnlocked)
+            {
+                UnlockItemInfos();
+            }
         }
 
-        private void InitModUI()
+        private void InitModMinerScreen(int windowId)
         {
-            GUI.Box(new Rect(10f, 10f, 450f, 150f), "ModMiner UI - Press HOME to open/close", GUI.skin.window);
-            if (GUI.Button(new Rect(10f, 430f, 150f, 20f), "X", GUI.skin.button))
+            if (GUI.Button(new Rect(440f, 10f, 20f, 20f), "X", GUI.skin.button))
             {
-                showUI = false;
-                EnableCursor(false);
+                CloseUi();
             }
 
             GUI.Label(new Rect(30f, 30f, 200f, 20f), "How many ores per type: ", GUI.skin.label);
@@ -133,15 +162,13 @@ namespace ModMiner
             if (GUI.Button(new Rect(280f, 30f, 150f, 20f), "Get ore stack", GUI.skin.button))
             {
                 OnClickGetStackButton();
-                showUI = false;
-                EnableCursor(false);
+                CloseUi();
             }
 
             if (GUI.Button(new Rect(280f, 50f, 150f, 20f), "Get gold", GUI.skin.button))
             {
                 OnClickGetGoldButton();
-                showUI = false;
-                EnableCursor(false);
+                CloseUi();
             }
 
             GUI.Label(new Rect(30f, 70f, 200f, 20f), "How many charcoal: ", GUI.skin.label);
@@ -149,8 +176,7 @@ namespace ModMiner
             if (GUI.Button(new Rect(280f, 70f, 150f, 20f), "Get charcoal", GUI.skin.button))
             {
                 OnClickGetCharcoalButton();
-                showUI = false;
-                EnableCursor(false);
+                CloseUi();
             }
 
             GUI.Label(new Rect(30f, 90f, 200f, 20f), "How many stones: ", GUI.skin.label);
@@ -158,8 +184,7 @@ namespace ModMiner
             if (GUI.Button(new Rect(280f, 90f, 150f, 20f), "Get stones", GUI.skin.button))
             {
                 OnClickGetStoneButton();
-                showUI = false;
-                EnableCursor(false);
+                CloseUi();
             }
 
             GUI.Label(new Rect(30f, 110f, 200f, 20f), "How many obsidian: ", GUI.skin.label);
@@ -167,8 +192,7 @@ namespace ModMiner
             if (GUI.Button(new Rect(280f, 110f, 150f, 20f), "Get obsidian", GUI.skin.button))
             {
                 OnClickGetObsidianButton();
-                showUI = false;
-                EnableCursor(false);
+                CloseUi();
             }
 
             GUI.Label(new Rect(30f, 130f, 200f, 20f), "How many iron: ", GUI.skin.label);
@@ -176,12 +200,20 @@ namespace ModMiner
             if (GUI.Button(new Rect(280f, 130f, 150f, 20f), "Get iron", GUI.skin.button))
             {
                 OnClickGetIronButton();
-                showUI = false;
-                EnableCursor(false);
+                CloseUi();
             }
+
+            // Make the windows be draggable.
+            GUI.DragWindow(new Rect(0, 0, 10000, 10000));
         }
 
-        private static void OnClickGetStackButton()
+        private void CloseUi()
+        {
+            showUI = false;
+            EnableCursor(false);
+        }
+
+        private void OnClickGetStackButton()
         {
             try
             {
@@ -196,7 +228,7 @@ namespace ModMiner
             }
         }
 
-        private static void OnClickGetGoldButton()
+        private void OnClickGetGoldButton()
         {
             try
             {
@@ -208,7 +240,7 @@ namespace ModMiner
             }
         }
 
-        private static void OnClickGetCharcoalButton()
+        private void OnClickGetCharcoalButton()
         {
             try
             {
@@ -220,7 +252,7 @@ namespace ModMiner
             }
         }
 
-        private static void OnClickGetStoneButton()
+        private void OnClickGetStoneButton()
         {
             try
             {
@@ -232,7 +264,7 @@ namespace ModMiner
             }
         }
 
-        private static void OnClickGetObsidianButton()
+        private void OnClickGetObsidianButton()
         {
             try
             {
@@ -244,7 +276,7 @@ namespace ModMiner
             }
         }
 
-        private static void OnClickGetIronButton()
+        private void OnClickGetIronButton()
         {
             try
             {
@@ -256,30 +288,19 @@ namespace ModMiner
             }
         }
 
-        private static void OnClickGetDynamiteButton()
+        public void AddMoneyBagToInventory(int count = 1)
         {
             try
             {
-                AddDynamiteToInventory();
-            }
-            catch (Exception exc)
-            {
-                ModAPI.Log.Write($"[{nameof(ModMiner)}.{nameof(ModMiner)}:{nameof(OnClickGetDynamiteButton)}] throws exception: {exc.Message}");
-            }
-        }
-
-        public static void AddMoneyBagToInventory(int count = 1)
-        {
-            try
-            {
-                itemsManager.UnlockItemInNotepad(ItemID.moneybag);
-                itemsManager.UnlockItemInfo(ItemID.moneybag.ToString());
+                ItemInfo moneybagInfo = itemsManager.GetInfo(ItemID.moneybag);
                 for (int i = 0; i < count; i++)
                 {
-                    player.AddItemToInventory(ItemID.moneybag.ToString());
+                    player.AddItemToInventory(moneybagInfo.m_ID.ToString());
                 }
-
-                ShowHUDBigInfo($"Added {count} x {itemsManager.GetInfo(ItemID.moneybag).GetNameToDisplayLocalized()}  to inventory", "ModMiner Info", HUDInfoLogTextureType.Count.ToString());
+                ShowHUDBigInfo(
+                                    $"Added <color #{ColorUtility.ToHtmlStringRGBA(Color.cyan)}>{count}</color> x <color #{ColorUtility.ToHtmlStringRGBA(Color.magenta)}>{moneybagInfo.GetNameToDisplayLocalized()}</color> to inventory",
+                                    $"{nameof(ModMiner)} Info",
+                                    HUDInfoLogTextureType.Count.ToString());
             }
             catch (Exception exc)
             {
@@ -287,38 +308,19 @@ namespace ModMiner
             }
         }
 
-        public static void AddDynamiteToInventory(int count = 1)
+        public void AddIronToInventory(int count = 1)
         {
             try
             {
-                Item detonator = itemsManager.GetInfo(ItemID.QuestConstruction_Detonator.ToString()).m_Item;
-                itemsManager.UnlockItemInNotepad(detonator.m_Info.m_ID);
-                itemsManager.UnlockItemInfo(detonator.m_Info.m_ID.ToString());
+                ItemInfo ironInfo = itemsManager.GetInfo(ItemID.iron_ore_stone);
                 for (int i = 0; i < count; i++)
                 {
-                    player.AddItemToInventory(detonator.m_Info.m_ID.ToString());
+                    player.AddItemToInventory(ironInfo.m_ID.ToString());
                 }
-
-                ShowHUDBigInfo($"Added {count} x dynamite to inventory", "Mod Miner Info", HUDInfoLogTextureType.Count.ToString());
-            }
-            catch (Exception exc)
-            {
-                ModAPI.Log.Write($"[{nameof(ModMiner)}.{nameof(ModMiner)}:{nameof(AddDynamiteToInventory)}] throws exception: {exc.Message}");
-            }
-        }
-
-        public static void AddIronToInventory(int count = 1)
-        {
-            try
-            {
-                itemsManager.UnlockItemInNotepad(ItemID.iron_ore_stone);
-                itemsManager.UnlockItemInfo(ItemID.iron_ore_stone.ToString());
-                for (int i = 0; i < count; i++)
-                {
-                    player.AddItemToInventory(ItemID.iron_ore_stone.ToString());
-                }
-
-                ShowHUDBigInfo($"Added {count} x {itemsManager.GetInfo(ItemID.iron_ore_stone).GetNameToDisplayLocalized()} to inventory", "ModMiner Info", HUDInfoLogTextureType.Count.ToString());
+                ShowHUDBigInfo(
+                    $"Added <color #{ColorUtility.ToHtmlStringRGBA(Color.cyan)}>{count}</color> x <color #{ColorUtility.ToHtmlStringRGBA(Color.magenta)}>{ironInfo.GetNameToDisplayLocalized()}</color> to inventory",
+                    $"{nameof(ModMiner)} Info",
+                    HUDInfoLogTextureType.Count.ToString());
             }
             catch (Exception exc)
             {
@@ -326,18 +328,19 @@ namespace ModMiner
             }
         }
 
-        public static void AddObsidianToInventory(int count = 1)
+        public void AddObsidianToInventory(int count = 1)
         {
             try
             {
-                itemsManager.UnlockItemInNotepad(ItemID.Obsidian_Stone);
-                itemsManager.UnlockItemInfo(ItemID.Obsidian_Stone.ToString());
+                ItemInfo obsidianInfo = itemsManager.GetInfo(ItemID.Obsidian_Stone);
                 for (int i = 0; i < count; i++)
                 {
-                    player.AddItemToInventory(ItemID.Obsidian_Stone.ToString());
+                    player.AddItemToInventory(obsidianInfo.m_ID.ToString());
                 }
-
-                ShowHUDBigInfo($"Added {count} x {itemsManager.GetInfo(ItemID.Obsidian_Stone).GetNameToDisplayLocalized()} to inventory", "Mod Miner Info", HUDInfoLogTextureType.Count.ToString());
+                ShowHUDBigInfo(
+                    $"Added <color #{ColorUtility.ToHtmlStringRGBA(Color.cyan)}>{count}</color> x <color #{ColorUtility.ToHtmlStringRGBA(Color.magenta)}>{obsidianInfo.GetNameToDisplayLocalized()}</color> to inventory",
+                    $"{nameof(ModMiner)} Info",
+                    HUDInfoLogTextureType.Count.ToString());
             }
             catch (Exception exc)
             {
@@ -345,18 +348,19 @@ namespace ModMiner
             }
         }
 
-        public static void AddStoneToInventory(int count = 1)
+        public void AddStoneToInventory(int count = 1)
         {
             try
             {
-                itemsManager.UnlockItemInNotepad(ItemID.Stone);
-                itemsManager.UnlockItemInfo(ItemID.Stone.ToString());
+                ItemInfo stoneInfo = itemsManager.GetInfo(ItemID.Stone);
                 for (int i = 0; i < count; i++)
                 {
-                    player.AddItemToInventory(ItemID.Stone.ToString());
+                    player.AddItemToInventory(stoneInfo.m_ID.ToString());
                 }
-
-                ShowHUDBigInfo($"Added {count} x {itemsManager.GetInfo(ItemID.Stone).GetNameToDisplayLocalized()} to inventory", "ModMiner Info", HUDInfoLogTextureType.Count.ToString());
+                ShowHUDBigInfo(
+                    $"Added <color #{ColorUtility.ToHtmlStringRGBA(Color.cyan)}>{count}</color> x <color #{ColorUtility.ToHtmlStringRGBA(Color.magenta)}>{stoneInfo.GetNameToDisplayLocalized()}</color> to inventory",
+                    $"{nameof(ModMiner)} Info",
+                    HUDInfoLogTextureType.Count.ToString());
             }
             catch (Exception exc)
             {
@@ -364,18 +368,19 @@ namespace ModMiner
             }
         }
 
-        public static void AddCharcoalToInventory(int count = 1)
+        public void AddCharcoalToInventory(int count = 1)
         {
             try
             {
-                itemsManager.UnlockItemInNotepad(ItemID.Charcoal);
-                itemsManager.UnlockItemInfo(ItemID.Charcoal.ToString());
+                ItemInfo charcoalInfo = itemsManager.GetInfo(ItemID.Charcoal);
                 for (int i = 0; i < count; i++)
                 {
-                    player.AddItemToInventory(ItemID.Charcoal.ToString());
+                    player.AddItemToInventory(charcoalInfo.m_ID.ToString());
                 }
-
-                ShowHUDBigInfo($"Added {count} x {itemsManager.GetInfo(ItemID.Charcoal).GetNameToDisplayLocalized()} to inventory", "ModMiner Info", HUDInfoLogTextureType.Count.ToString());
+                ShowHUDBigInfo(
+                     $"Added <color #{ColorUtility.ToHtmlStringRGBA(Color.cyan)}>{count}</color> x <color #{ColorUtility.ToHtmlStringRGBA(Color.magenta)}>{charcoalInfo.GetNameToDisplayLocalized()}</color> to inventory",
+                     $"{nameof(ModMiner)}  Info",
+                     HUDInfoLogTextureType.Count.ToString());
             }
             catch (Exception exc)
             {

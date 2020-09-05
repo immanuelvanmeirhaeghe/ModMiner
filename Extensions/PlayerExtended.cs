@@ -10,7 +10,7 @@ namespace ModMiner
         protected override void Start()
         {
             base.Start();
-            new GameObject("__ModMiner__").AddComponent<ModMiner>();
+            new GameObject($"__{nameof(ModMiner)}__").AddComponent<ModMiner>();
         }
     }
 }
