@@ -15,6 +15,8 @@ namespace ModMiner
     {
         private static ModMiner s_Instance;
 
+		private static readonly string ModName = nameof(ModMiner);
+
         private bool showUI = false;
 
         public static List<ItemID> ItemIdsToUnlock { get; set; } = new List<ItemID> { ItemID.moneybag, ItemID.iron_ore_stone, ItemID.Obsidian_Stone, ItemID.Stone, ItemID.Charcoal };
@@ -135,7 +137,7 @@ namespace ModMiner
         private void InitWindow()
         {
             int wid = GetHashCode();
-            ModMinerScreen = GUI.Window(wid, ModMinerScreen, InitModMinerScreen, $"{nameof(ModMiner)}");
+            ModMinerScreen = GUILayout.Window(wid, ModMinerScreen, InitModMinerScreen, $"{ModName}");
         }
 
         private void InitData()
@@ -150,64 +152,83 @@ namespace ModMiner
             }
         }
 
-        private void InitModMinerScreen(int windowId)
+        private void InitModMinerScreen(int windowID)
         {
-            if (GUI.Button(new Rect(440f, 10f, 20f, 20f), "X", GUI.skin.button))
+            using (var verticalScope = new GUILayout.VerticalScope($"{ModName}box"))
             {
-                CloseUi();
-            }
+                if (GUI.Button(new Rect(430f, 0f, 20f, 20f), "X", GUI.skin.button))
+                {
+                    CloseWindow();
+                }
 
-            GUI.Label(new Rect(30f, 30f, 200f, 20f), "How many ores per type: ", GUI.skin.label);
-            m_CountStack = GUI.TextField(new Rect(250f, 30f, 20f, 20f), m_CountStack, GUI.skin.textField);
-            if (GUI.Button(new Rect(280f, 30f, 150f, 20f), "Get ore stack", GUI.skin.button))
-            {
-                OnClickGetStackButton();
-                CloseUi();
-            }
+                using (var horizontalScope = new GUILayout.HorizontalScope("stackBox"))
+                {
+                    GUILayout.Label("How many ores per type: ", GUI.skin.label);
+                    m_CountStack = GUILayout.TextField(m_CountStack, GUI.skin.textField, GUILayout.MaxWidth(50f));
+                    if (GUILayout.Button("Get ore stack", GUI.skin.button, GUILayout.MinWidth(100f), GUILayout.MaxWidth(200f)))
+                    {
+                        OnClickGetStackButton();
+                        CloseWindow();
+                    }
+                }
 
-            if (GUI.Button(new Rect(280f, 50f, 150f, 20f), "Get gold", GUI.skin.button))
-            {
-                OnClickGetGoldButton();
-                CloseUi();
-            }
+                using (var horizontalScope = new GUILayout.HorizontalScope("goldBox"))
+                {
+                    if (GUILayout.Button("Get gold", GUI.skin.button))
+                    {
+                        OnClickGetGoldButton();
+                        CloseWindow();
+                    }
+                }
 
-            GUI.Label(new Rect(30f, 70f, 200f, 20f), "How many charcoal: ", GUI.skin.label);
-            m_CountCharcoal = GUI.TextField(new Rect(250f, 70f, 20f, 20f), m_CountCharcoal, GUI.skin.textField);
-            if (GUI.Button(new Rect(280f, 70f, 150f, 20f), "Get charcoal", GUI.skin.button))
-            {
-                OnClickGetCharcoalButton();
-                CloseUi();
-            }
+                using (var horizontalScope = new GUILayout.HorizontalScope("charcoalBox"))
+                {
+                    GUILayout.Label("How many charcoal: ", GUI.skin.label);
+                    m_CountCharcoal = GUILayout.TextField(m_CountCharcoal, GUI.skin.textField, GUILayout.MaxWidth(50f));
+                    if (GUILayout.Button("Get charcoal", GUI.skin.button, GUILayout.MinWidth(100f), GUILayout.MaxWidth(200f)))
+                    {
+                        OnClickGetCharcoalButton();
+                        CloseWindow();
+                    }
+                }
 
-            GUI.Label(new Rect(30f, 90f, 200f, 20f), "How many stones: ", GUI.skin.label);
-            m_CountStone = GUI.TextField(new Rect(250f, 90f, 20f, 20f), m_CountStone, GUI.skin.textField);
-            if (GUI.Button(new Rect(280f, 90f, 150f, 20f), "Get stones", GUI.skin.button))
-            {
-                OnClickGetStoneButton();
-                CloseUi();
-            }
+                using (var horizontalScope = new GUILayout.HorizontalScope("stoneBox"))
+                {
+                    GUILayout.Label("How many stones: ", GUI.skin.label);
+                    m_CountStone = GUILayout.TextField(m_CountStone, GUI.skin.textField, GUILayout.MaxWidth(50f));
+                    if (GUILayout.Button("Get stones", GUI.skin.button, GUILayout.MinWidth(100f), GUILayout.MaxWidth(200f)))
+                    {
+                        OnClickGetStoneButton();
+                        CloseWindow();
+                    }
+                }
 
-            GUI.Label(new Rect(30f, 110f, 200f, 20f), "How many obsidian: ", GUI.skin.label);
-            m_CountObsidian = GUI.TextField(new Rect(250f, 110f, 20f, 20f), m_CountObsidian, GUI.skin.textField);
-            if (GUI.Button(new Rect(280f, 110f, 150f, 20f), "Get obsidian", GUI.skin.button))
-            {
-                OnClickGetObsidianButton();
-                CloseUi();
-            }
+                using (var horizontalScope = new GUILayout.HorizontalScope("obsidianBox"))
+                {
+                    GUILayout.Label("How many obsidian: ", GUI.skin.label);
+                    m_CountObsidian = GUILayout.TextField(m_CountObsidian, GUI.skin.textField, GUILayout.MaxWidth(50f));
+                    if (GUILayout.Button("Get obsidian", GUI.skin.button, GUILayout.MinWidth(100f), GUILayout.MaxWidth(200f)))
+                    {
+                        OnClickGetObsidianButton();
+                        CloseWindow();
+                    }
+                }
 
-            GUI.Label(new Rect(30f, 130f, 200f, 20f), "How many iron: ", GUI.skin.label);
-            m_CountIron = GUI.TextField(new Rect(250f, 130f, 20f, 20f), m_CountIron, GUI.skin.textField);
-            if (GUI.Button(new Rect(280f, 130f, 150f, 20f), "Get iron", GUI.skin.button))
-            {
-                OnClickGetIronButton();
-                CloseUi();
+                using (var horizontalScope = new GUILayout.HorizontalScope("ironBox"))
+                {
+                    GUILayout.Label("How many iron: ", GUI.skin.label);
+                    m_CountIron = GUILayout.TextField(m_CountIron, GUI.skin.textField, GUILayout.MaxWidth(50f));
+                    if (GUILayout.Button("Get iron", GUI.skin.button, GUILayout.MinWidth(100f), GUILayout.MaxWidth(200f)))
+                    {
+                        OnClickGetIronButton();
+                        CloseWindow();
+                    }
+                }
             }
-
-            // Make the windows be draggable.
-            GUI.DragWindow(new Rect(0, 0, 10000, 10000));
+            GUI.DragWindow(new Rect(0f, 0f, 10000f, 10000f));
         }
 
-        private void CloseUi()
+        private void CloseWindow()
         {
             showUI = false;
             EnableCursor(false);
@@ -224,7 +245,7 @@ namespace ModMiner
             }
             catch (Exception exc)
             {
-                ModAPI.Log.Write($"[{nameof(ModMiner)}.{nameof(ModMiner)}:{nameof(OnClickGetStackButton)}] throws exception: {exc.Message}");
+                ModAPI.Log.Write($"[{ModName}.{ModName}:{nameof(OnClickGetStackButton)}] throws exception: {exc.Message}");
             }
         }
 
@@ -236,7 +257,7 @@ namespace ModMiner
             }
             catch (Exception exc)
             {
-                ModAPI.Log.Write($"[{nameof(ModMiner)}.{nameof(ModMiner)}:{nameof(OnClickGetGoldButton)}] throws exception: {exc.Message}");
+                ModAPI.Log.Write($"[{ModName}.{ModName}:{nameof(OnClickGetGoldButton)}] throws exception: {exc.Message}");
             }
         }
 
@@ -248,7 +269,7 @@ namespace ModMiner
             }
             catch (Exception exc)
             {
-                ModAPI.Log.Write($"[{nameof(ModMiner)}.{nameof(ModMiner)}:{nameof(OnClickGetCharcoalButton)}] throws exception: {exc.Message}");
+                ModAPI.Log.Write($"[{ModName}.{ModName}:{nameof(OnClickGetCharcoalButton)}] throws exception: {exc.Message}");
             }
         }
 
@@ -260,7 +281,7 @@ namespace ModMiner
             }
             catch (Exception exc)
             {
-                ModAPI.Log.Write($"[{nameof(ModMiner)}.{nameof(ModMiner)}:{nameof(OnClickGetStoneButton)}] throws exception: {exc.Message}");
+                ModAPI.Log.Write($"[{ModName}.{ModName}:{nameof(OnClickGetStoneButton)}] throws exception: {exc.Message}");
             }
         }
 
@@ -272,7 +293,7 @@ namespace ModMiner
             }
             catch (Exception exc)
             {
-                ModAPI.Log.Write($"[{nameof(ModMiner)}.{nameof(ModMiner)}:{nameof(OnClickGetObsidianButton)}] throws exception: {exc.Message}");
+                ModAPI.Log.Write($"[{ModName}.{ModName}:{nameof(OnClickGetObsidianButton)}] throws exception: {exc.Message}");
             }
         }
 
@@ -284,7 +305,7 @@ namespace ModMiner
             }
             catch (Exception exc)
             {
-                ModAPI.Log.Write($"[{nameof(ModMiner)}.{nameof(ModMiner)}:{nameof(OnClickGetIronButton)}] throws exception: {exc.Message}");
+                ModAPI.Log.Write($"[{ModName}.{ModName}:{nameof(OnClickGetIronButton)}] throws exception: {exc.Message}");
             }
         }
 
@@ -298,13 +319,13 @@ namespace ModMiner
                     player.AddItemToInventory(moneybagInfo.m_ID.ToString());
                 }
                 ShowHUDBigInfo(
-                                    $"Added <color #{ColorUtility.ToHtmlStringRGBA(Color.cyan)}>{count}</color> x <color #{ColorUtility.ToHtmlStringRGBA(Color.magenta)}>{moneybagInfo.GetNameToDisplayLocalized()}</color> to inventory",
-                                    $"{nameof(ModMiner)} Info",
+                                    $"Added {count} x {moneybagInfo.GetNameToDisplayLocalized()} to inventory",
+                                    $"{ModName} Info",
                                     HUDInfoLogTextureType.Count.ToString());
             }
             catch (Exception exc)
             {
-                ModAPI.Log.Write($"[{nameof(ModMiner)}.{nameof(ModMiner)}:{nameof(AddMoneyBagToInventory)}] throws exception: {exc.Message}");
+                ModAPI.Log.Write($"[{ModName}.{ModName}:{nameof(AddMoneyBagToInventory)}] throws exception: {exc.Message}");
             }
         }
 
@@ -318,13 +339,13 @@ namespace ModMiner
                     player.AddItemToInventory(ironInfo.m_ID.ToString());
                 }
                 ShowHUDBigInfo(
-                    $"Added <color #{ColorUtility.ToHtmlStringRGBA(Color.cyan)}>{count}</color> x <color #{ColorUtility.ToHtmlStringRGBA(Color.magenta)}>{ironInfo.GetNameToDisplayLocalized()}</color> to inventory",
-                    $"{nameof(ModMiner)} Info",
+                    $"Added {count} x {ironInfo.GetNameToDisplayLocalized()} to inventory",
+                    $"{ModName} Info",
                     HUDInfoLogTextureType.Count.ToString());
             }
             catch (Exception exc)
             {
-                ModAPI.Log.Write($"[{nameof(ModMiner)}.{nameof(ModMiner)}:{nameof(AddIronToInventory)}] throws exception: {exc.Message}");
+                ModAPI.Log.Write($"[{ModName}.{ModName}:{nameof(AddIronToInventory)}] throws exception: {exc.Message}");
             }
         }
 
@@ -338,13 +359,13 @@ namespace ModMiner
                     player.AddItemToInventory(obsidianInfo.m_ID.ToString());
                 }
                 ShowHUDBigInfo(
-                    $"Added <color #{ColorUtility.ToHtmlStringRGBA(Color.cyan)}>{count}</color> x <color #{ColorUtility.ToHtmlStringRGBA(Color.magenta)}>{obsidianInfo.GetNameToDisplayLocalized()}</color> to inventory",
-                    $"{nameof(ModMiner)} Info",
+                    $"Added {count} x {obsidianInfo.GetNameToDisplayLocalized()} to inventory",
+                    $"{ModName} Info",
                     HUDInfoLogTextureType.Count.ToString());
             }
             catch (Exception exc)
             {
-                ModAPI.Log.Write($"[{nameof(ModMiner)}.{nameof(ModMiner)}:{nameof(AddObsidianToInventory)}] throws exception: {exc.Message}");
+                ModAPI.Log.Write($"[{ModName}.{ModName}:{nameof(AddObsidianToInventory)}] throws exception: {exc.Message}");
             }
         }
 
@@ -358,13 +379,13 @@ namespace ModMiner
                     player.AddItemToInventory(stoneInfo.m_ID.ToString());
                 }
                 ShowHUDBigInfo(
-                    $"Added <color #{ColorUtility.ToHtmlStringRGBA(Color.cyan)}>{count}</color> x <color #{ColorUtility.ToHtmlStringRGBA(Color.magenta)}>{stoneInfo.GetNameToDisplayLocalized()}</color> to inventory",
-                    $"{nameof(ModMiner)} Info",
+                    $"Added {count} x {stoneInfo.GetNameToDisplayLocalized()} to inventory",
+                    $"{ModName} Info",
                     HUDInfoLogTextureType.Count.ToString());
             }
             catch (Exception exc)
             {
-                ModAPI.Log.Write($"[{nameof(ModMiner)}.{nameof(ModMiner)}:{nameof(AddStoneToInventory)}] throws exception: {exc.Message}");
+                ModAPI.Log.Write($"[{ModName}.{ModName}:{nameof(AddStoneToInventory)}] throws exception: {exc.Message}");
             }
         }
 
@@ -378,13 +399,13 @@ namespace ModMiner
                     player.AddItemToInventory(charcoalInfo.m_ID.ToString());
                 }
                 ShowHUDBigInfo(
-                     $"Added <color #{ColorUtility.ToHtmlStringRGBA(Color.cyan)}>{count}</color> x <color #{ColorUtility.ToHtmlStringRGBA(Color.magenta)}>{charcoalInfo.GetNameToDisplayLocalized()}</color> to inventory",
-                     $"{nameof(ModMiner)}  Info",
+                     $"Added {count} x {charcoalInfo.GetNameToDisplayLocalized()} to inventory",
+                     $"{ModName} Info",
                      HUDInfoLogTextureType.Count.ToString());
             }
             catch (Exception exc)
             {
-                ModAPI.Log.Write($"[{nameof(ModMiner)}.{nameof(ModMiner)}:{nameof(AddCharcoalToInventory)}] throws exception: {exc.Message}");
+                ModAPI.Log.Write($"[{ModName}.{ModName}:{nameof(AddCharcoalToInventory)}] throws exception: {exc.Message}");
             }
         }
     }
