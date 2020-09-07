@@ -137,7 +137,7 @@ namespace ModMiner
         private void InitWindow()
         {
             int wid = GetHashCode();
-            ModMinerScreen = GUILayout.Window(wid, ModMinerScreen, InitModMinerScreen, $"{ModName}");
+            ModMinerScreen = GUILayout.Window(wid, ModMinerScreen, InitModMinerScreen, $"{ModName}", GUI.skin.window);
         }
 
         private void InitData()
@@ -154,14 +154,14 @@ namespace ModMiner
 
         private void InitModMinerScreen(int windowID)
         {
-            using (var verticalScope = new GUILayout.VerticalScope($"{ModName}box"))
+            using (var verticalScope = new GUILayout.VerticalScope(GUI.skin.box))
             {
                 if (GUI.Button(new Rect(430f, 0f, 20f, 20f), "X", GUI.skin.button))
                 {
                     CloseWindow();
                 }
 
-                using (var horizontalScope = new GUILayout.HorizontalScope("stackBox"))
+                using (var horizontalScope = new GUILayout.HorizontalScope(GUI.skin.box))
                 {
                     GUILayout.Label("How many ores per type: ", GUI.skin.label);
                     m_CountStack = GUILayout.TextField(m_CountStack, GUI.skin.textField, GUILayout.MaxWidth(50f));
@@ -172,7 +172,7 @@ namespace ModMiner
                     }
                 }
 
-                using (var horizontalScope = new GUILayout.HorizontalScope("goldBox"))
+                using (var horizontalScope = new GUILayout.HorizontalScope(GUI.skin.box))
                 {
                     if (GUILayout.Button("Get gold", GUI.skin.button))
                     {
@@ -181,7 +181,7 @@ namespace ModMiner
                     }
                 }
 
-                using (var horizontalScope = new GUILayout.HorizontalScope("charcoalBox"))
+                using (var horizontalScope = new GUILayout.HorizontalScope(GUI.skin.box))
                 {
                     GUILayout.Label("How many charcoal: ", GUI.skin.label);
                     m_CountCharcoal = GUILayout.TextField(m_CountCharcoal, GUI.skin.textField, GUILayout.MaxWidth(50f));
@@ -192,7 +192,7 @@ namespace ModMiner
                     }
                 }
 
-                using (var horizontalScope = new GUILayout.HorizontalScope("stoneBox"))
+                using (var horizontalScope = new GUILayout.HorizontalScope(GUI.skin.box))
                 {
                     GUILayout.Label("How many stones: ", GUI.skin.label);
                     m_CountStone = GUILayout.TextField(m_CountStone, GUI.skin.textField, GUILayout.MaxWidth(50f));
@@ -203,7 +203,7 @@ namespace ModMiner
                     }
                 }
 
-                using (var horizontalScope = new GUILayout.HorizontalScope("obsidianBox"))
+                using (var horizontalScope = new GUILayout.HorizontalScope(GUI.skin.box))
                 {
                     GUILayout.Label("How many obsidian: ", GUI.skin.label);
                     m_CountObsidian = GUILayout.TextField(m_CountObsidian, GUI.skin.textField, GUILayout.MaxWidth(50f));
@@ -214,7 +214,7 @@ namespace ModMiner
                     }
                 }
 
-                using (var horizontalScope = new GUILayout.HorizontalScope("ironBox"))
+                using (var horizontalScope = new GUILayout.HorizontalScope(GUI.skin.box))
                 {
                     GUILayout.Label("How many iron: ", GUI.skin.label);
                     m_CountIron = GUILayout.TextField(m_CountIron, GUI.skin.textField, GUILayout.MaxWidth(50f));
