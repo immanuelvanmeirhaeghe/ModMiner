@@ -29,11 +29,11 @@ namespace ModMiner
         private static HUDManager hUDManager;
         private static Player player;
 
-        private static string m_CountStack = "1";
-        private static string m_CountCharcoal = "1";
-        private static string m_CountStone = "1";
-        private static string m_CountObsidian = "1";
-        private static string m_CountIron = "1";
+        private static string CountStack = "1";
+        private static string CountCharcoal = "1";
+        private static string CountStone = "1";
+        private static string CountObsidian = "1";
+        private static string CountIron = "1";
 
         private bool _isActiveForMultiplayer;
         public bool IsModActiveForMultiplayer
@@ -164,7 +164,7 @@ namespace ModMiner
                 using (var horizontalScope = new GUILayout.HorizontalScope(GUI.skin.box))
                 {
                     GUILayout.Label("How many ores per type: ", GUI.skin.label);
-                    m_CountStack = GUILayout.TextField(m_CountStack, GUI.skin.textField, GUILayout.MaxWidth(50f));
+                    CountStack = GUILayout.TextField(CountStack, GUI.skin.textField, GUILayout.MaxWidth(50f));
                     if (GUILayout.Button("Get ore stack", GUI.skin.button, GUILayout.MinWidth(100f), GUILayout.MaxWidth(200f)))
                     {
                         OnClickGetStackButton();
@@ -184,7 +184,7 @@ namespace ModMiner
                 using (var horizontalScope = new GUILayout.HorizontalScope(GUI.skin.box))
                 {
                     GUILayout.Label("How many charcoal: ", GUI.skin.label);
-                    m_CountCharcoal = GUILayout.TextField(m_CountCharcoal, GUI.skin.textField, GUILayout.MaxWidth(50f));
+                    CountCharcoal = GUILayout.TextField(CountCharcoal, GUI.skin.textField, GUILayout.MaxWidth(50f));
                     if (GUILayout.Button("Get charcoal", GUI.skin.button, GUILayout.MinWidth(100f), GUILayout.MaxWidth(200f)))
                     {
                         OnClickGetCharcoalButton();
@@ -195,7 +195,7 @@ namespace ModMiner
                 using (var horizontalScope = new GUILayout.HorizontalScope(GUI.skin.box))
                 {
                     GUILayout.Label("How many stones: ", GUI.skin.label);
-                    m_CountStone = GUILayout.TextField(m_CountStone, GUI.skin.textField, GUILayout.MaxWidth(50f));
+                    CountStone = GUILayout.TextField(CountStone, GUI.skin.textField, GUILayout.MaxWidth(50f));
                     if (GUILayout.Button("Get stones", GUI.skin.button, GUILayout.MinWidth(100f), GUILayout.MaxWidth(200f)))
                     {
                         OnClickGetStoneButton();
@@ -206,7 +206,7 @@ namespace ModMiner
                 using (var horizontalScope = new GUILayout.HorizontalScope(GUI.skin.box))
                 {
                     GUILayout.Label("How many obsidian: ", GUI.skin.label);
-                    m_CountObsidian = GUILayout.TextField(m_CountObsidian, GUI.skin.textField, GUILayout.MaxWidth(50f));
+                    CountObsidian = GUILayout.TextField(CountObsidian, GUI.skin.textField, GUILayout.MaxWidth(50f));
                     if (GUILayout.Button("Get obsidian", GUI.skin.button, GUILayout.MinWidth(100f), GUILayout.MaxWidth(200f)))
                     {
                         OnClickGetObsidianButton();
@@ -217,7 +217,7 @@ namespace ModMiner
                 using (var horizontalScope = new GUILayout.HorizontalScope(GUI.skin.box))
                 {
                     GUILayout.Label("How many iron: ", GUI.skin.label);
-                    m_CountIron = GUILayout.TextField(m_CountIron, GUI.skin.textField, GUILayout.MaxWidth(50f));
+                    CountIron = GUILayout.TextField(CountIron, GUI.skin.textField, GUILayout.MaxWidth(50f));
                     if (GUILayout.Button("Get iron", GUI.skin.button, GUILayout.MinWidth(100f), GUILayout.MaxWidth(200f)))
                     {
                         OnClickGetIronButton();
@@ -238,10 +238,10 @@ namespace ModMiner
         {
             try
             {
-                AddCharcoalToInventory(Int32.Parse(m_CountStack));
-                AddStoneToInventory(Int32.Parse(m_CountStack));
-                AddObsidianToInventory(Int32.Parse(m_CountStack));
-                AddIronToInventory(Int32.Parse(m_CountStack));
+                AddCharcoalToInventory(Int32.Parse(CountStack));
+                AddStoneToInventory(Int32.Parse(CountStack));
+                AddObsidianToInventory(Int32.Parse(CountStack));
+                AddIronToInventory(Int32.Parse(CountStack));
             }
             catch (Exception exc)
             {
@@ -265,7 +265,7 @@ namespace ModMiner
         {
             try
             {
-                AddCharcoalToInventory(Int32.Parse(m_CountCharcoal));
+                AddCharcoalToInventory(Int32.Parse(CountCharcoal));
             }
             catch (Exception exc)
             {
@@ -277,7 +277,7 @@ namespace ModMiner
         {
             try
             {
-                AddStoneToInventory(Int32.Parse(m_CountStone));
+                AddStoneToInventory(Int32.Parse(CountStone));
             }
             catch (Exception exc)
             {
@@ -289,7 +289,7 @@ namespace ModMiner
         {
             try
             {
-                AddObsidianToInventory(Int32.Parse(m_CountObsidian));
+                AddObsidianToInventory(Int32.Parse(CountObsidian));
             }
             catch (Exception exc)
             {
@@ -301,7 +301,7 @@ namespace ModMiner
         {
             try
             {
-                AddIronToInventory(Int32.Parse(m_CountIron));
+                AddIronToInventory(Int32.Parse(CountIron));
             }
             catch (Exception exc)
             {
