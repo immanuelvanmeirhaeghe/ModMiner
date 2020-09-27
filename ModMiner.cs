@@ -17,13 +17,13 @@ namespace ModMiner
 
 		private static readonly string ModName = nameof(ModMiner);
 
-        private bool showUI = false;
+        private bool ShowUI = false;
 
         public static List<ItemID> ItemIdsToUnlock { get; set; } = new List<ItemID> { ItemID.moneybag, ItemID.iron_ore_stone, ItemID.Obsidian_Stone, ItemID.Stone, ItemID.Charcoal };
 
         private bool m_ItemsUnlocked = false;
 
-        public Rect ModMinerScreen = new Rect(10f, 10f, 450f, 150f);
+        public static Rect ModMinerScreen = new Rect(10f, 10f, 450f, 150f);
 
         private static ItemsManager itemsManager;
         private static HUDManager hUDManager;
@@ -101,22 +101,27 @@ namespace ModMiner
         {
             if (Input.GetKeyDown(KeyCode.Home))
             {
-                if (!showUI)
+                if (!ShowUI)
                 {
                     InitData();
                     EnableCursor(true);
                 }
-                showUI = !showUI;
-                if (!showUI)
+                ToggleShowUI();
+                if (!ShowUI)
                 {
                     EnableCursor(false);
                 }
             }
         }
 
+        private void ToggleShowUI()
+        {
+            ShowUI = !ShowUI;
+        }
+
         private void OnGUI()
         {
-            if (showUI)
+            if (ShowUI)
             {
                 InitData();
                 InitSkinUI();
@@ -163,7 +168,7 @@ namespace ModMiner
 
                 using (var horizontalScope = new GUILayout.HorizontalScope(GUI.skin.box))
                 {
-                    GUILayout.Label("How many ores per type: ", GUI.skin.label);
+                    GUILayout.Label("How many ores of each type?: ", GUI.skin.label);
                     CountStack = GUILayout.TextField(CountStack, GUI.skin.textField, GUILayout.MaxWidth(50f));
                     if (GUILayout.Button("Get ore stack", GUI.skin.button, GUILayout.MinWidth(100f), GUILayout.MaxWidth(200f)))
                     {
@@ -183,7 +188,7 @@ namespace ModMiner
 
                 using (var horizontalScope = new GUILayout.HorizontalScope(GUI.skin.box))
                 {
-                    GUILayout.Label("How many charcoal: ", GUI.skin.label);
+                    GUILayout.Label("How many charcoal?: ", GUI.skin.label);
                     CountCharcoal = GUILayout.TextField(CountCharcoal, GUI.skin.textField, GUILayout.MaxWidth(50f));
                     if (GUILayout.Button("Get charcoal", GUI.skin.button, GUILayout.MinWidth(100f), GUILayout.MaxWidth(200f)))
                     {
@@ -194,7 +199,7 @@ namespace ModMiner
 
                 using (var horizontalScope = new GUILayout.HorizontalScope(GUI.skin.box))
                 {
-                    GUILayout.Label("How many stones: ", GUI.skin.label);
+                    GUILayout.Label("How many stones?: ", GUI.skin.label);
                     CountStone = GUILayout.TextField(CountStone, GUI.skin.textField, GUILayout.MaxWidth(50f));
                     if (GUILayout.Button("Get stones", GUI.skin.button, GUILayout.MinWidth(100f), GUILayout.MaxWidth(200f)))
                     {
@@ -205,7 +210,7 @@ namespace ModMiner
 
                 using (var horizontalScope = new GUILayout.HorizontalScope(GUI.skin.box))
                 {
-                    GUILayout.Label("How many obsidian: ", GUI.skin.label);
+                    GUILayout.Label("How many obsidian?: ", GUI.skin.label);
                     CountObsidian = GUILayout.TextField(CountObsidian, GUI.skin.textField, GUILayout.MaxWidth(50f));
                     if (GUILayout.Button("Get obsidian", GUI.skin.button, GUILayout.MinWidth(100f), GUILayout.MaxWidth(200f)))
                     {
@@ -216,7 +221,7 @@ namespace ModMiner
 
                 using (var horizontalScope = new GUILayout.HorizontalScope(GUI.skin.box))
                 {
-                    GUILayout.Label("How many iron: ", GUI.skin.label);
+                    GUILayout.Label("How many iron?: ", GUI.skin.label);
                     CountIron = GUILayout.TextField(CountIron, GUI.skin.textField, GUILayout.MaxWidth(50f));
                     if (GUILayout.Button("Get iron", GUI.skin.button, GUILayout.MinWidth(100f), GUILayout.MaxWidth(200f)))
                     {
@@ -230,7 +235,7 @@ namespace ModMiner
 
         private void CloseWindow()
         {
-            showUI = false;
+            ShowUI = false;
             EnableCursor(false);
         }
 
