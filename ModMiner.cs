@@ -15,15 +15,24 @@ namespace ModMiner
     {
         private static ModMiner s_Instance;
 
-		private static readonly string ModName = nameof(ModMiner);
+        private static readonly string ModName = nameof(ModMiner);
 
         private bool ShowUI = false;
 
-        public static List<ItemID> ItemIdsToUnlock { get; set; } = new List<ItemID> { ItemID.moneybag, ItemID.iron_ore_stone, ItemID.Obsidian_Stone, ItemID.Stone, ItemID.Charcoal };
+        public static List<ItemID> MiningUtilsToUnlock { get; set; }
+            = new List<ItemID> {
+                ItemID.pickaxe,
+                ItemID.metal_pickaxe,
+                ItemID.moneybag,
+                ItemID.iron_ore_stone,
+                ItemID.Obsidian_Stone,
+                ItemID.Stone,
+                ItemID.Charcoal
+            };
 
-        private bool m_ItemsUnlocked = false;
+        private bool MiningIsUnlocked = false;
 
-        public static Rect ModMinerScreen = new Rect(10f, 10f, 450f, 150f);
+        public static Rect ModMinerScreen = new Rect(Screen.width / 30f, Screen.height / 30f, 450f, 150f);
 
         private static ItemsManager itemsManager;
         private static HUDManager hUDManager;
@@ -35,18 +44,28 @@ namespace ModMiner
         private static string CountObsidian = "1";
         private static string CountIron = "1";
 
-        private bool _isActiveForMultiplayer;
-        public bool IsModActiveForMultiplayer
+        public bool IsModActiveForMultiplayer { get; private set; }
+        public bool IsModActiveForSingleplayer => ReplTools.AmIMaster();
+
+        private static string HUDBigInfoMessage(string message) => $"<color=#{ColorUtility.ToHtmlStringRGBA(Color.red)}>System</color>\n{message}";
+
+        public static string AddedToInventoryMessage(int count, ItemInfo itemInfo)
+            => $"<color=#{ColorUtility.ToHtmlStringRGBA(Color.green)}>Added {count} x {itemInfo.GetNameToDisplayLocalized()}</color> to inventory.";
+
+        public void Start()
         {
-            get => _isActiveForMultiplayer;
-            set => _isActiveForMultiplayer = FindObjectOfType(typeof(ModManager.ModManager)) != null && ModManager.ModManager.AllowModsForMultiplayer;
+            ModManager.ModManager.onPermissionValueChanged += ModManager_onPermissionValueChanged;
         }
 
-        private bool _isActiveForSingleplayer;
-        public bool IsModActiveForSingleplayer
+        private void ModManager_onPermissionValueChanged(bool optionValue)
         {
-            get => _isActiveForSingleplayer;
-            set => _isActiveForSingleplayer = ReplTools.AmIMaster();
+            IsModActiveForMultiplayer = optionValue;
+            ShowHUDBigInfo(
+                          (optionValue ?
+                            HUDBigInfoMessage($"<color=#{ColorUtility.ToHtmlStringRGBA(Color.green)}>Permission to use mods for multiplayer was granted!</color>")
+                            : HUDBigInfoMessage($"<color=#{ColorUtility.ToHtmlStringRGBA(Color.yellow)}>Permission to use mods for multiplayer was revoked!</color>")),
+                           $"{ModName} Info",
+                           HUDInfoLogTextureType.Count.ToString());
         }
 
         public ModMiner()
@@ -129,14 +148,17 @@ namespace ModMiner
             }
         }
 
-        private void UnlockItemInfos()
+        private void UnlockMining()
         {
-            foreach (ItemID itemID in ItemIdsToUnlock)
+            if (!MiningIsUnlocked)
             {
-                itemsManager.UnlockItemInNotepad(itemID);
-                itemsManager.UnlockItemInfo(itemID.ToString());
+                foreach (ItemID itemIdToUnlock in MiningUtilsToUnlock)
+                {
+                    itemsManager.UnlockItemInNotepad(itemIdToUnlock);
+                    itemsManager.UnlockItemInfo(itemIdToUnlock.ToString());
+                }
+                MiningIsUnlocked = true;
             }
-            m_ItemsUnlocked = true;
         }
 
         private void InitWindow()
@@ -150,11 +172,7 @@ namespace ModMiner
             itemsManager = ItemsManager.Get();
             player = Player.Get();
             hUDManager = HUDManager.Get();
-
-            if (!m_ItemsUnlocked)
-            {
-                UnlockItemInfos();
-            }
+            UnlockMining();
         }
 
         private void InitModMinerScreen(int windowID)
@@ -324,9 +342,9 @@ namespace ModMiner
                     player.AddItemToInventory(moneybagInfo.m_ID.ToString());
                 }
                 ShowHUDBigInfo(
-                                    $"Added {count} x {moneybagInfo.GetNameToDisplayLocalized()} to inventory",
-                                    $"{ModName} Info",
-                                    HUDInfoLogTextureType.Count.ToString());
+                        HUDBigInfoMessage(AddedToInventoryMessage(count, moneybagInfo)),
+                        $"{ModName} Info",
+                        HUDInfoLogTextureType.Count.ToString());
             }
             catch (Exception exc)
             {
@@ -344,9 +362,9 @@ namespace ModMiner
                     player.AddItemToInventory(ironInfo.m_ID.ToString());
                 }
                 ShowHUDBigInfo(
-                    $"Added {count} x {ironInfo.GetNameToDisplayLocalized()} to inventory",
-                    $"{ModName} Info",
-                    HUDInfoLogTextureType.Count.ToString());
+                        HUDBigInfoMessage(AddedToInventoryMessage(count, ironInfo)),
+                        $"{ModName} Info",
+                        HUDInfoLogTextureType.Count.ToString());
             }
             catch (Exception exc)
             {
@@ -364,9 +382,9 @@ namespace ModMiner
                     player.AddItemToInventory(obsidianInfo.m_ID.ToString());
                 }
                 ShowHUDBigInfo(
-                    $"Added {count} x {obsidianInfo.GetNameToDisplayLocalized()} to inventory",
-                    $"{ModName} Info",
-                    HUDInfoLogTextureType.Count.ToString());
+                       HUDBigInfoMessage(AddedToInventoryMessage(count, obsidianInfo)),
+                       $"{ModName} Info",
+                       HUDInfoLogTextureType.Count.ToString());
             }
             catch (Exception exc)
             {
@@ -384,9 +402,9 @@ namespace ModMiner
                     player.AddItemToInventory(stoneInfo.m_ID.ToString());
                 }
                 ShowHUDBigInfo(
-                    $"Added {count} x {stoneInfo.GetNameToDisplayLocalized()} to inventory",
-                    $"{ModName} Info",
-                    HUDInfoLogTextureType.Count.ToString());
+                        HUDBigInfoMessage(AddedToInventoryMessage(count, stoneInfo)),
+                        $"{ModName} Info",
+                        HUDInfoLogTextureType.Count.ToString());
             }
             catch (Exception exc)
             {
@@ -404,9 +422,9 @@ namespace ModMiner
                     player.AddItemToInventory(charcoalInfo.m_ID.ToString());
                 }
                 ShowHUDBigInfo(
-                     $"Added {count} x {charcoalInfo.GetNameToDisplayLocalized()} to inventory",
-                     $"{ModName} Info",
-                     HUDInfoLogTextureType.Count.ToString());
+                       HUDBigInfoMessage(AddedToInventoryMessage(count, charcoalInfo)),
+                       $"{ModName} Info",
+                       HUDInfoLogTextureType.Count.ToString());
             }
             catch (Exception exc)
             {
