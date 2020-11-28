@@ -5,6 +5,13 @@ using UnityEngine;
 
 namespace ModMiner
 {
+    public enum MessageType
+    {
+        Info,
+        Warning,
+        Error
+    }
+
     /// <summary>
     /// ModMiner is a mod for Green Hell
     /// that allows a player to spawn charcoal, stones, obsidian, iron and gold sacks.
@@ -13,13 +20,17 @@ namespace ModMiner
     /// </summary>
     public class ModMiner : MonoBehaviour
     {
-        private static ModMiner s_Instance;
-
+        private static ModMiner Instance;
         private static readonly string ModName = nameof(ModMiner);
+        private static readonly float ModScreenTotalWidth = 500f;
+        private static readonly float ModScreenTotalHeight = 150f;
+        private static readonly float ModScreenMinHeight = 30f;
+        private static readonly float ModScreenMaxHeight = 180f;
 
+        private static bool IsMinimized { get; set; } = false;
         private bool ShowUI = false;
 
-        public static List<ItemID> MiningUtilsToUnlock { get; set; }
+        public static List<ItemID> MiningItemIDs { get; set; }
             = new List<ItemID> {
                 ItemID.pickaxe,
                 ItemID.metal_pickaxe,
@@ -31,12 +42,16 @@ namespace ModMiner
             };
 
         private bool MiningIsUnlocked = false;
+        public static Rect ModMinerScreen = new Rect(Screen.width / 6f, Screen.height / 6f, ModScreenTotalWidth, ModScreenTotalHeight);
 
-        public static Rect ModMinerScreen = new Rect(Screen.width / 30f, Screen.height / 30f, 450f, 150f);
+        private static ItemsManager LocalItemsManager;
+        private static HUDManager LocalHUDManager;
+        private static Player LocalPlayer;
 
-        private static ItemsManager itemsManager;
-        private static HUDManager hUDManager;
-        private static Player player;
+        public static string AddedToInventoryMessage(int count, ItemInfo itemInfo) => $"Added {count} x {itemInfo.GetNameToDisplayLocalized()} to inventory.";
+        public static string PermissionChangedMessage(string permission) => $"Permission to use mods and cheats in multiplayer was {permission}!";
+        public static string HUDBigInfoMessage(string message, MessageType messageType, Color? headcolor = null)
+            => $"<color=#{ (headcolor != null ? ColorUtility.ToHtmlStringRGBA(headcolor.Value) : ColorUtility.ToHtmlStringRGBA(Color.red))  }>{messageType}</color>\n{message}";
 
         private static string CountStack = "1";
         private static string CountCharcoal = "1";
@@ -46,11 +61,6 @@ namespace ModMiner
 
         public bool IsModActiveForMultiplayer { get; private set; }
         public bool IsModActiveForSingleplayer => ReplTools.AmIMaster();
-
-        private static string HUDBigInfoMessage(string message) => $"<color=#{ColorUtility.ToHtmlStringRGBA(Color.red)}>System</color>\n{message}";
-
-        public static string AddedToInventoryMessage(int count, ItemInfo itemInfo)
-            => $"<color=#{ColorUtility.ToHtmlStringRGBA(Color.green)}>Added {count} x {itemInfo.GetNameToDisplayLocalized()}</color> to inventory.";
 
         public void Start()
         {
@@ -62,26 +72,28 @@ namespace ModMiner
             IsModActiveForMultiplayer = optionValue;
             ShowHUDBigInfo(
                           (optionValue ?
-                            HUDBigInfoMessage($"<color=#{ColorUtility.ToHtmlStringRGBA(Color.green)}>Permission to use mods for multiplayer was granted!</color>")
-                            : HUDBigInfoMessage($"<color=#{ColorUtility.ToHtmlStringRGBA(Color.yellow)}>Permission to use mods for multiplayer was revoked!</color>")),
-                           $"{ModName} Info",
-                           HUDInfoLogTextureType.Count.ToString());
+                            HUDBigInfoMessage(PermissionChangedMessage($"granted"), MessageType.Info, Color.green)
+                            : HUDBigInfoMessage(PermissionChangedMessage($"revoked"), MessageType.Info, Color.yellow))
+                            );
         }
 
         public ModMiner()
         {
             useGUILayout = true;
-            s_Instance = this;
+            Instance = this;
         }
 
         public static ModMiner Get()
         {
-            return s_Instance;
+            return Instance;
         }
 
-        public void ShowHUDBigInfo(string text, string header, string textureName)
+        public void ShowHUDBigInfo(string text)
         {
-            HUDBigInfo hudBigInfo = (HUDBigInfo)hUDManager.GetHUD(typeof(HUDBigInfo));
+            string header = $"{ModName} Info";
+            string textureName = HUDInfoLogTextureType.Count.ToString();
+            HUDBigInfo hudBigInfo = (HUDBigInfo)LocalHUDManager.GetHUD(typeof(HUDBigInfo));
+            HUDBigInfoData.s_Duration = 2f;
             HUDBigInfoData hudBigInfoData = new HUDBigInfoData
             {
                 m_Header = header,
@@ -104,15 +116,15 @@ namespace ModMiner
 
             if (blockPlayer)
             {
-                player.BlockMoves();
-                player.BlockRotation();
-                player.BlockInspection();
+                LocalPlayer.BlockMoves();
+                LocalPlayer.BlockRotation();
+                LocalPlayer.BlockInspection();
             }
             else
             {
-                player.UnblockMoves();
-                player.UnblockRotation();
-                player.UnblockInspection();
+                LocalPlayer.UnblockMoves();
+                LocalPlayer.UnblockRotation();
+                LocalPlayer.UnblockInspection();
             }
         }
 
@@ -152,10 +164,10 @@ namespace ModMiner
         {
             if (!MiningIsUnlocked)
             {
-                foreach (ItemID itemIdToUnlock in MiningUtilsToUnlock)
+                foreach (ItemID itemIdToUnlock in MiningItemIDs)
                 {
-                    itemsManager.UnlockItemInNotepad(itemIdToUnlock);
-                    itemsManager.UnlockItemInfo(itemIdToUnlock.ToString());
+                    LocalItemsManager.UnlockItemInNotepad(itemIdToUnlock);
+                    LocalItemsManager.UnlockItemInfo(itemIdToUnlock.ToString());
                 }
                 MiningIsUnlocked = true;
             }
@@ -169,9 +181,9 @@ namespace ModMiner
 
         private void InitData()
         {
-            itemsManager = ItemsManager.Get();
-            player = Player.Get();
-            hUDManager = HUDManager.Get();
+            LocalItemsManager = ItemsManager.Get();
+            LocalPlayer = Player.Get();
+            LocalHUDManager = HUDManager.Get();
             UnlockMining();
         }
 
@@ -179,76 +191,102 @@ namespace ModMiner
         {
             using (var verticalScope = new GUILayout.VerticalScope(GUI.skin.box))
             {
-                if (GUI.Button(new Rect(430f, 0f, 20f, 20f), "X", GUI.skin.button))
+                ScreenMenuBox();
+                if (!IsMinimized)
                 {
-                    CloseWindow();
-                }
-
-                using (var horizontalScope = new GUILayout.HorizontalScope(GUI.skin.box))
-                {
-                    GUILayout.Label("How many ores of each type?: ", GUI.skin.label);
-                    CountStack = GUILayout.TextField(CountStack, GUI.skin.textField, GUILayout.MaxWidth(50f));
-                    if (GUILayout.Button("Get ore stack", GUI.skin.button, GUILayout.MinWidth(100f), GUILayout.MaxWidth(200f)))
+                    using (var horizontalScope = new GUILayout.HorizontalScope(GUI.skin.box))
                     {
-                        OnClickGetStackButton();
-                        CloseWindow();
+                        GUILayout.Label("How many ores of each type?: ", GUI.skin.label);
+                        CountStack = GUILayout.TextField(CountStack, GUI.skin.textField, GUILayout.MaxWidth(50f));
+                        if (GUILayout.Button("Get ore stack", GUI.skin.button, GUILayout.MinWidth(100f), GUILayout.MaxWidth(200f)))
+                        {
+                            OnClickGetStackButton();
+                            CloseWindow();
+                        }
                     }
-                }
 
-                using (var horizontalScope = new GUILayout.HorizontalScope(GUI.skin.box))
-                {
-                    if (GUILayout.Button("Get gold", GUI.skin.button))
+                    using (var horizontalScope = new GUILayout.HorizontalScope(GUI.skin.box))
                     {
-                        OnClickGetGoldButton();
-                        CloseWindow();
+                        if (GUILayout.Button("Get gold", GUI.skin.button))
+                        {
+                            OnClickGetGoldButton();
+                            CloseWindow();
+                        }
                     }
-                }
 
-                using (var horizontalScope = new GUILayout.HorizontalScope(GUI.skin.box))
-                {
-                    GUILayout.Label("How many charcoal?: ", GUI.skin.label);
-                    CountCharcoal = GUILayout.TextField(CountCharcoal, GUI.skin.textField, GUILayout.MaxWidth(50f));
-                    if (GUILayout.Button("Get charcoal", GUI.skin.button, GUILayout.MinWidth(100f), GUILayout.MaxWidth(200f)))
+                    using (var horizontalScope = new GUILayout.HorizontalScope(GUI.skin.box))
                     {
-                        OnClickGetCharcoalButton();
-                        CloseWindow();
+                        GUILayout.Label("How many charcoal?: ", GUI.skin.label);
+                        CountCharcoal = GUILayout.TextField(CountCharcoal, GUI.skin.textField, GUILayout.MaxWidth(50f));
+                        if (GUILayout.Button("Get charcoal", GUI.skin.button, GUILayout.MinWidth(100f), GUILayout.MaxWidth(200f)))
+                        {
+                            OnClickGetCharcoalButton();
+                            CloseWindow();
+                        }
                     }
-                }
 
-                using (var horizontalScope = new GUILayout.HorizontalScope(GUI.skin.box))
-                {
-                    GUILayout.Label("How many stones?: ", GUI.skin.label);
-                    CountStone = GUILayout.TextField(CountStone, GUI.skin.textField, GUILayout.MaxWidth(50f));
-                    if (GUILayout.Button("Get stones", GUI.skin.button, GUILayout.MinWidth(100f), GUILayout.MaxWidth(200f)))
+                    using (var horizontalScope = new GUILayout.HorizontalScope(GUI.skin.box))
                     {
-                        OnClickGetStoneButton();
-                        CloseWindow();
+                        GUILayout.Label("How many stones?: ", GUI.skin.label);
+                        CountStone = GUILayout.TextField(CountStone, GUI.skin.textField, GUILayout.MaxWidth(50f));
+                        if (GUILayout.Button("Get stones", GUI.skin.button, GUILayout.MinWidth(100f), GUILayout.MaxWidth(200f)))
+                        {
+                            OnClickGetStoneButton();
+                            CloseWindow();
+                        }
                     }
-                }
 
-                using (var horizontalScope = new GUILayout.HorizontalScope(GUI.skin.box))
-                {
-                    GUILayout.Label("How many obsidian?: ", GUI.skin.label);
-                    CountObsidian = GUILayout.TextField(CountObsidian, GUI.skin.textField, GUILayout.MaxWidth(50f));
-                    if (GUILayout.Button("Get obsidian", GUI.skin.button, GUILayout.MinWidth(100f), GUILayout.MaxWidth(200f)))
+                    using (var horizontalScope = new GUILayout.HorizontalScope(GUI.skin.box))
                     {
-                        OnClickGetObsidianButton();
-                        CloseWindow();
+                        GUILayout.Label("How many obsidian?: ", GUI.skin.label);
+                        CountObsidian = GUILayout.TextField(CountObsidian, GUI.skin.textField, GUILayout.MaxWidth(50f));
+                        if (GUILayout.Button("Get obsidian", GUI.skin.button, GUILayout.MinWidth(100f), GUILayout.MaxWidth(200f)))
+                        {
+                            OnClickGetObsidianButton();
+                            CloseWindow();
+                        }
                     }
-                }
 
-                using (var horizontalScope = new GUILayout.HorizontalScope(GUI.skin.box))
-                {
-                    GUILayout.Label("How many iron?: ", GUI.skin.label);
-                    CountIron = GUILayout.TextField(CountIron, GUI.skin.textField, GUILayout.MaxWidth(50f));
-                    if (GUILayout.Button("Get iron", GUI.skin.button, GUILayout.MinWidth(100f), GUILayout.MaxWidth(200f)))
+                    using (var horizontalScope = new GUILayout.HorizontalScope(GUI.skin.box))
                     {
-                        OnClickGetIronButton();
-                        CloseWindow();
+                        GUILayout.Label("How many iron?: ", GUI.skin.label);
+                        CountIron = GUILayout.TextField(CountIron, GUI.skin.textField, GUILayout.MaxWidth(50f));
+                        if (GUILayout.Button("Get iron", GUI.skin.button, GUILayout.MinWidth(100f), GUILayout.MaxWidth(200f)))
+                        {
+                            OnClickGetIronButton();
+                            CloseWindow();
+                        }
                     }
                 }
             }
             GUI.DragWindow(new Rect(0f, 0f, 10000f, 10000f));
+        }
+
+        private void ScreenMenuBox()
+        {
+            if (GUI.Button(new Rect(ModMinerScreen.width - 40f, 0f, 20f, 20f), "-", GUI.skin.button))
+            {
+                CollapseWindow();
+            }
+
+            if (GUI.Button(new Rect(ModMinerScreen.width - 20f, 0f, 20f, 20f), "X", GUI.skin.button))
+            {
+                CloseWindow();
+            }
+        }
+        private void CollapseWindow()
+        {
+            if (!IsMinimized)
+            {
+                ModMinerScreen.Set(ModMinerScreen.x, Screen.height - ModScreenMinHeight, ModScreenTotalWidth, ModScreenMinHeight);
+                IsMinimized = true;
+            }
+            else
+            {
+                ModMinerScreen.Set(ModMinerScreen.x, Screen.height / ModScreenMinHeight, ModScreenTotalWidth, ModScreenTotalHeight);
+                IsMinimized = false;
+            }
+            InitWindow();
         }
 
         private void CloseWindow()
@@ -268,7 +306,7 @@ namespace ModMiner
             }
             catch (Exception exc)
             {
-                ModAPI.Log.Write($"[{ModName}.{ModName}:{nameof(OnClickGetStackButton)}] throws exception: {exc.Message}");
+                ModAPI.Log.Write($"[{ModName}.{ModName}:{nameof(OnClickGetStackButton)}] throws exception: \n{exc.Message}");
             }
         }
 
@@ -336,15 +374,12 @@ namespace ModMiner
         {
             try
             {
-                ItemInfo moneybagInfo = itemsManager.GetInfo(ItemID.moneybag);
+                ItemInfo moneybagInfo = LocalItemsManager.GetInfo(ItemID.moneybag);
                 for (int i = 0; i < count; i++)
                 {
-                    player.AddItemToInventory(moneybagInfo.m_ID.ToString());
+                    LocalPlayer.AddItemToInventory(moneybagInfo.m_ID.ToString());
                 }
-                ShowHUDBigInfo(
-                        HUDBigInfoMessage(AddedToInventoryMessage(count, moneybagInfo)),
-                        $"{ModName} Info",
-                        HUDInfoLogTextureType.Count.ToString());
+                ShowHUDBigInfo(HUDBigInfoMessage(AddedToInventoryMessage(count, moneybagInfo), MessageType.Info, Color.green));
             }
             catch (Exception exc)
             {
@@ -356,15 +391,12 @@ namespace ModMiner
         {
             try
             {
-                ItemInfo ironInfo = itemsManager.GetInfo(ItemID.iron_ore_stone);
+                ItemInfo ironInfo = LocalItemsManager.GetInfo(ItemID.iron_ore_stone);
                 for (int i = 0; i < count; i++)
                 {
-                    player.AddItemToInventory(ironInfo.m_ID.ToString());
+                    LocalPlayer.AddItemToInventory(ironInfo.m_ID.ToString());
                 }
-                ShowHUDBigInfo(
-                        HUDBigInfoMessage(AddedToInventoryMessage(count, ironInfo)),
-                        $"{ModName} Info",
-                        HUDInfoLogTextureType.Count.ToString());
+                ShowHUDBigInfo(HUDBigInfoMessage(AddedToInventoryMessage(count, ironInfo), MessageType.Info, Color.green));
             }
             catch (Exception exc)
             {
@@ -376,15 +408,12 @@ namespace ModMiner
         {
             try
             {
-                ItemInfo obsidianInfo = itemsManager.GetInfo(ItemID.Obsidian_Stone);
+                ItemInfo obsidianInfo = LocalItemsManager.GetInfo(ItemID.Obsidian_Stone);
                 for (int i = 0; i < count; i++)
                 {
-                    player.AddItemToInventory(obsidianInfo.m_ID.ToString());
+                    LocalPlayer.AddItemToInventory(obsidianInfo.m_ID.ToString());
                 }
-                ShowHUDBigInfo(
-                       HUDBigInfoMessage(AddedToInventoryMessage(count, obsidianInfo)),
-                       $"{ModName} Info",
-                       HUDInfoLogTextureType.Count.ToString());
+                ShowHUDBigInfo(HUDBigInfoMessage(AddedToInventoryMessage(count, obsidianInfo), MessageType.Info, Color.green));
             }
             catch (Exception exc)
             {
@@ -396,15 +425,12 @@ namespace ModMiner
         {
             try
             {
-                ItemInfo stoneInfo = itemsManager.GetInfo(ItemID.Stone);
+                ItemInfo stoneInfo = LocalItemsManager.GetInfo(ItemID.Stone);
                 for (int i = 0; i < count; i++)
                 {
-                    player.AddItemToInventory(stoneInfo.m_ID.ToString());
+                    LocalPlayer.AddItemToInventory(stoneInfo.m_ID.ToString());
                 }
-                ShowHUDBigInfo(
-                        HUDBigInfoMessage(AddedToInventoryMessage(count, stoneInfo)),
-                        $"{ModName} Info",
-                        HUDInfoLogTextureType.Count.ToString());
+                ShowHUDBigInfo(HUDBigInfoMessage(AddedToInventoryMessage(count, stoneInfo), MessageType.Info, Color.green));
             }
             catch (Exception exc)
             {
@@ -416,15 +442,12 @@ namespace ModMiner
         {
             try
             {
-                ItemInfo charcoalInfo = itemsManager.GetInfo(ItemID.Charcoal);
+                ItemInfo charcoalInfo = LocalItemsManager.GetInfo(ItemID.Charcoal);
                 for (int i = 0; i < count; i++)
                 {
-                    player.AddItemToInventory(charcoalInfo.m_ID.ToString());
+                    LocalPlayer.AddItemToInventory(charcoalInfo.m_ID.ToString());
                 }
-                ShowHUDBigInfo(
-                       HUDBigInfoMessage(AddedToInventoryMessage(count, charcoalInfo)),
-                       $"{ModName} Info",
-                       HUDInfoLogTextureType.Count.ToString());
+                ShowHUDBigInfo(HUDBigInfoMessage(AddedToInventoryMessage(count, charcoalInfo), MessageType.Info, Color.green));
             }
             catch (Exception exc)
             {
