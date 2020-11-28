@@ -194,72 +194,91 @@ namespace ModMiner
                 ScreenMenuBox();
                 if (!IsMinimized)
                 {
-                    using (var horizontalScope = new GUILayout.HorizontalScope(GUI.skin.box))
-                    {
-                        GUILayout.Label("How many ores of each type?: ", GUI.skin.label);
-                        CountStack = GUILayout.TextField(CountStack, GUI.skin.textField, GUILayout.MaxWidth(50f));
-                        if (GUILayout.Button("Get ore stack", GUI.skin.button, GUILayout.MinWidth(100f), GUILayout.MaxWidth(200f)))
-                        {
-                            OnClickGetStackButton();
-                            CloseWindow();
-                        }
-                    }
-
-                    using (var horizontalScope = new GUILayout.HorizontalScope(GUI.skin.box))
-                    {
-                        if (GUILayout.Button("Get gold", GUI.skin.button))
-                        {
-                            OnClickGetGoldButton();
-                            CloseWindow();
-                        }
-                    }
-
-                    using (var horizontalScope = new GUILayout.HorizontalScope(GUI.skin.box))
-                    {
-                        GUILayout.Label("How many charcoal?: ", GUI.skin.label);
-                        CountCharcoal = GUILayout.TextField(CountCharcoal, GUI.skin.textField, GUILayout.MaxWidth(50f));
-                        if (GUILayout.Button("Get charcoal", GUI.skin.button, GUILayout.MinWidth(100f), GUILayout.MaxWidth(200f)))
-                        {
-                            OnClickGetCharcoalButton();
-                            CloseWindow();
-                        }
-                    }
-
-                    using (var horizontalScope = new GUILayout.HorizontalScope(GUI.skin.box))
-                    {
-                        GUILayout.Label("How many stones?: ", GUI.skin.label);
-                        CountStone = GUILayout.TextField(CountStone, GUI.skin.textField, GUILayout.MaxWidth(50f));
-                        if (GUILayout.Button("Get stones", GUI.skin.button, GUILayout.MinWidth(100f), GUILayout.MaxWidth(200f)))
-                        {
-                            OnClickGetStoneButton();
-                            CloseWindow();
-                        }
-                    }
-
-                    using (var horizontalScope = new GUILayout.HorizontalScope(GUI.skin.box))
-                    {
-                        GUILayout.Label("How many obsidian?: ", GUI.skin.label);
-                        CountObsidian = GUILayout.TextField(CountObsidian, GUI.skin.textField, GUILayout.MaxWidth(50f));
-                        if (GUILayout.Button("Get obsidian", GUI.skin.button, GUILayout.MinWidth(100f), GUILayout.MaxWidth(200f)))
-                        {
-                            OnClickGetObsidianButton();
-                            CloseWindow();
-                        }
-                    }
-
-                    using (var horizontalScope = new GUILayout.HorizontalScope(GUI.skin.box))
-                    {
-                        GUILayout.Label("How many iron?: ", GUI.skin.label);
-                        CountIron = GUILayout.TextField(CountIron, GUI.skin.textField, GUILayout.MaxWidth(50f));
-                        if (GUILayout.Button("Get iron", GUI.skin.button, GUILayout.MinWidth(100f), GUILayout.MaxWidth(200f)))
-                        {
-                            OnClickGetIronButton();
-                            CloseWindow();
-                        }
-                    }
+                    OresBox();
+                    GoldBox();
+                    CharcoalBox();
+                    StonesBox();
+                    ObsidianBox();
+                    IronBox();
                 }
             }
             GUI.DragWindow(new Rect(0f, 0f, 10000f, 10000f));
+        }
+
+        private void ObsidianBox()
+        {
+            using (var horizontalScope = new GUILayout.HorizontalScope(GUI.skin.box))
+            {
+                GUILayout.Label("How many obsidian?: ", GUI.skin.label);
+                CountObsidian = GUILayout.TextField(CountObsidian, GUI.skin.textField, GUILayout.MaxWidth(50f));
+                if (GUILayout.Button("Get obsidian", GUI.skin.button, GUILayout.MinWidth(100f), GUILayout.MaxWidth(200f)))
+                {
+                    OnClickGetObsidianButton();
+                }
+            }
+        }
+
+        private void StonesBox()
+        {
+            using (var horizontalScope = new GUILayout.HorizontalScope(GUI.skin.box))
+            {
+                GUILayout.Label("How many stones?: ", GUI.skin.label);
+                CountStone = GUILayout.TextField(CountStone, GUI.skin.textField, GUILayout.MaxWidth(50f));
+                if (GUILayout.Button("Get stones", GUI.skin.button, GUILayout.MinWidth(100f), GUILayout.MaxWidth(200f)))
+                {
+                    OnClickGetStoneButton();
+                }
+            }
+        }
+
+        private void CharcoalBox()
+        {
+            using (var horizontalScope = new GUILayout.HorizontalScope(GUI.skin.box))
+            {
+                GUILayout.Label("How many charcoal?: ", GUI.skin.label);
+                CountCharcoal = GUILayout.TextField(CountCharcoal, GUI.skin.textField, GUILayout.MaxWidth(50f));
+                if (GUILayout.Button("Get charcoal", GUI.skin.button, GUILayout.MinWidth(100f), GUILayout.MaxWidth(200f)))
+                {
+                    OnClickGetCharcoalButton();
+                }
+            }
+        }
+
+        private void GoldBox()
+        {
+            using (var horizontalScope = new GUILayout.HorizontalScope(GUI.skin.box))
+            {
+                if (GUILayout.Button("Get gold", GUI.skin.button))
+                {
+                    OnClickGetGoldButton();
+                }
+            }
+        }
+
+        private void OresBox()
+        {
+            using (var horizontalScope = new GUILayout.HorizontalScope(GUI.skin.box))
+            {
+                GUILayout.Label("How many ores of each type?: ", GUI.skin.label);
+                CountStack = GUILayout.TextField(CountStack, GUI.skin.textField, GUILayout.MaxWidth(50f));
+                if (GUILayout.Button("Get ore stack", GUI.skin.button, GUILayout.MinWidth(100f), GUILayout.MaxWidth(200f)))
+                {
+                    OnClickGetStackButton();
+                }
+            }
+        }
+
+        private void IronBox()
+        {
+            using (var horizontalScope = new GUILayout.HorizontalScope(GUI.skin.box))
+            {
+                GUILayout.Label("How many iron?: ", GUI.skin.label);
+                CountIron = GUILayout.TextField(CountIron, GUI.skin.textField, GUILayout.MaxWidth(50f));
+                if (GUILayout.Button("Get iron", GUI.skin.button, GUILayout.MinWidth(100f), GUILayout.MaxWidth(200f)))
+                {
+                    OnClickGetIronButton();
+                }
+            }
         }
 
         private void ScreenMenuBox()
@@ -274,6 +293,7 @@ namespace ModMiner
                 CloseWindow();
             }
         }
+
         private void CollapseWindow()
         {
             if (!IsMinimized)
