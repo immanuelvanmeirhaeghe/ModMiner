@@ -24,6 +24,7 @@ namespace ModMiner
         private static readonly string ModName = nameof(ModMiner);
         private static readonly float ModScreenTotalWidth = 500f;
         private static readonly float ModScreenTotalHeight = 150f;
+        private static readonly float ModScreenMinWidth = 50f;
         private static readonly float ModScreenMinHeight = 30f;
         private static readonly float ModScreenMaxHeight = 180f;
 
@@ -42,7 +43,7 @@ namespace ModMiner
             };
 
         private bool MiningIsUnlocked = false;
-        public static Rect ModMinerScreen = new Rect(Screen.width / 6f, Screen.height / 6f, ModScreenTotalWidth, ModScreenTotalHeight);
+        public static Rect ModMinerScreen = new Rect(Screen.width / 3f, Screen.height / 3f, ModScreenTotalWidth, ModScreenTotalHeight);
 
         private static ItemsManager LocalItemsManager;
         private static HUDManager LocalHUDManager;
@@ -298,7 +299,7 @@ namespace ModMiner
         {
             if (!IsMinimized)
             {
-                ModMinerScreen.Set(ModMinerScreen.x, Screen.height - ModScreenMinHeight, ModScreenTotalWidth, ModScreenMinHeight);
+                ModMinerScreen.Set(ModMinerScreen.x, Screen.height - ModScreenMinHeight, ModScreenMinWidth, ModScreenMinHeight);
                 IsMinimized = true;
             }
             else
