@@ -25,9 +25,11 @@ namespace ModMiner
         private static readonly float ModScreenTotalWidth = 500f;
         private static readonly float ModScreenTotalHeight = 150f;
         private static readonly float ModScreenMinWidth = 50f;
-        private static readonly float ModScreenMinHeight = 30f;
-        private static readonly float ModScreenMaxHeight = 180f;
-
+        private static readonly float ModScreenMaxWidth = 550f;
+        private static readonly float ModScreenMinHeight = 50f;
+        private static readonly float ModScreenMaxHeight = 200f;
+        private static float ModScreenStartPositionX { get; set; } = (Screen.width - ModScreenMaxWidth) % ModScreenTotalWidth;
+        private static float ModScreenStartPositionY { get; set; } = (Screen.height - ModScreenMaxHeight) % ModScreenTotalHeight;
         private static bool IsMinimized { get; set; } = false;
         private bool ShowUI = false;
 
@@ -43,7 +45,7 @@ namespace ModMiner
             };
 
         private bool MiningIsUnlocked = false;
-        public static Rect ModMinerScreen = new Rect(Screen.width / 3f, Screen.height / 3f, ModScreenTotalWidth, ModScreenTotalHeight);
+        public static Rect ModMinerScreen = new Rect(ModScreenStartPositionX, ModScreenStartPositionY, ModScreenTotalWidth, ModScreenTotalHeight);
 
         private static ItemsManager LocalItemsManager;
         private static HUDManager LocalHUDManager;
@@ -190,7 +192,14 @@ namespace ModMiner
 
         private void InitModMinerScreen(int windowID)
         {
-            using (var modContentScope = new GUILayout.VerticalScope(GUI.skin.box, GUILayout.ExpandHeight(true), GUILayout.MinHeight(ModScreenMinHeight), GUILayout.MaxHeight(ModScreenMaxHeight)))
+            using (var modContentScope = new GUILayout.VerticalScope(
+                                                                                                        GUI.skin.box,
+                                                                                                        GUILayout.ExpandWidth(true),
+                                                                                                        GUILayout.MinWidth(ModScreenMinWidth),
+                                                                                                        GUILayout.MaxWidth(ModScreenMaxWidth),
+                                                                                                        GUILayout.ExpandHeight(true),
+                                                                                                        GUILayout.MinHeight(ModScreenMinHeight),
+                                                                                                        GUILayout.MaxHeight(ModScreenMaxHeight)))
             {
                 ScreenMenuBox();
                 if (!IsMinimized)
@@ -212,7 +221,7 @@ namespace ModMiner
             {
                 GUILayout.Label("How many obsidian?: ", GUI.skin.label);
                 CountObsidian = GUILayout.TextField(CountObsidian, GUI.skin.textField, GUILayout.MaxWidth(50f));
-                if (GUILayout.Button("Get obsidian", GUI.skin.button, GUILayout.MinWidth(100f), GUILayout.MaxWidth(200f)))
+                if (GUILayout.Button("Get obsidian", GUI.skin.button, GUILayout.MaxWidth(200f)))
                 {
                     OnClickGetObsidianButton();
                 }
@@ -225,7 +234,7 @@ namespace ModMiner
             {
                 GUILayout.Label("How many stones?: ", GUI.skin.label);
                 CountStone = GUILayout.TextField(CountStone, GUI.skin.textField, GUILayout.MaxWidth(50f));
-                if (GUILayout.Button("Get stones", GUI.skin.button, GUILayout.MinWidth(100f), GUILayout.MaxWidth(200f)))
+                if (GUILayout.Button("Get stones", GUI.skin.button, GUILayout.MaxWidth(200f)))
                 {
                     OnClickGetStoneButton();
                 }
@@ -238,7 +247,7 @@ namespace ModMiner
             {
                 GUILayout.Label("How many charcoal?: ", GUI.skin.label);
                 CountCharcoal = GUILayout.TextField(CountCharcoal, GUI.skin.textField, GUILayout.MaxWidth(50f));
-                if (GUILayout.Button("Get charcoal", GUI.skin.button, GUILayout.MinWidth(100f), GUILayout.MaxWidth(200f)))
+                if (GUILayout.Button("Get charcoal", GUI.skin.button, GUILayout.MaxWidth(200f)))
                 {
                     OnClickGetCharcoalButton();
                 }
@@ -262,7 +271,7 @@ namespace ModMiner
             {
                 GUILayout.Label("How many ores of each type?: ", GUI.skin.label);
                 CountStack = GUILayout.TextField(CountStack, GUI.skin.textField, GUILayout.MaxWidth(50f));
-                if (GUILayout.Button("Get ore stack", GUI.skin.button, GUILayout.MinWidth(100f), GUILayout.MaxWidth(200f)))
+                if (GUILayout.Button("Get ore stack", GUI.skin.button, GUILayout.MaxWidth(200f)))
                 {
                     OnClickGetStackButton();
                 }
@@ -275,7 +284,7 @@ namespace ModMiner
             {
                 GUILayout.Label("How many iron?: ", GUI.skin.label);
                 CountIron = GUILayout.TextField(CountIron, GUI.skin.textField, GUILayout.MaxWidth(50f));
-                if (GUILayout.Button("Get iron", GUI.skin.button, GUILayout.MinWidth(100f), GUILayout.MaxWidth(200f)))
+                if (GUILayout.Button("Get iron", GUI.skin.button, GUILayout.MaxWidth(200f)))
                 {
                     OnClickGetIronButton();
                 }
@@ -299,12 +308,14 @@ namespace ModMiner
         {
             if (!IsMinimized)
             {
-                ModMinerScreen.Set(ModMinerScreen.x, Screen.height - ModScreenMinHeight, ModScreenMinWidth, ModScreenMinHeight);
+                ModScreenStartPositionX = ModMinerScreen.x;
+                ModScreenStartPositionY = ModMinerScreen.y;
+                ModMinerScreen.Set(ModMinerScreen.x, ModMinerScreen.y, ModScreenMinWidth, ModScreenMinHeight);
                 IsMinimized = true;
             }
             else
             {
-                ModMinerScreen.Set(ModMinerScreen.x, Screen.height / ModScreenMinHeight, ModScreenTotalWidth, ModScreenTotalHeight);
+                ModMinerScreen.Set(ModScreenStartPositionX, ModScreenStartPositionY, ModScreenTotalWidth, ModScreenTotalHeight);
                 IsMinimized = false;
             }
             InitWindow();
