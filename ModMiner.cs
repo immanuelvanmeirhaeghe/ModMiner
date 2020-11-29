@@ -326,7 +326,7 @@ namespace ModMiner
             }
             catch (Exception exc)
             {
-                ModAPI.Log.Write($"[{ModName}.{ModName}:{nameof(OnClickGetStackButton)}] throws exception: \n{exc.Message}");
+                ModAPI.Log.Write($"[{ModName}:{nameof(OnClickGetStackButton)}] throws exception: \n{exc.Message}");
             }
         }
 
@@ -338,7 +338,7 @@ namespace ModMiner
             }
             catch (Exception exc)
             {
-                ModAPI.Log.Write($"[{ModName}.{ModName}:{nameof(OnClickGetGoldButton)}] throws exception: {exc.Message}");
+                ModAPI.Log.Write($"[{ModName}:{nameof(OnClickGetGoldButton)}] throws exception:\n{exc.Message}");
             }
         }
 
@@ -350,7 +350,7 @@ namespace ModMiner
             }
             catch (Exception exc)
             {
-                ModAPI.Log.Write($"[{ModName}.{ModName}:{nameof(OnClickGetCharcoalButton)}] throws exception: {exc.Message}");
+                ModAPI.Log.Write($"[{ModName}:{nameof(OnClickGetCharcoalButton)}] throws exception:\n{exc.Message}");
             }
         }
 
@@ -362,7 +362,7 @@ namespace ModMiner
             }
             catch (Exception exc)
             {
-                ModAPI.Log.Write($"[{ModName}.{ModName}:{nameof(OnClickGetStoneButton)}] throws exception: {exc.Message}");
+                ModAPI.Log.Write($"[{ModName}:{nameof(OnClickGetStoneButton)}] throws exception:\n{exc.Message}");
             }
         }
 
@@ -374,7 +374,7 @@ namespace ModMiner
             }
             catch (Exception exc)
             {
-                ModAPI.Log.Write($"[{ModName}.{ModName}:{nameof(OnClickGetObsidianButton)}] throws exception: {exc.Message}");
+                ModAPI.Log.Write($"[{ModName}:{nameof(OnClickGetObsidianButton)}] throws exception:\n{exc.Message}");
             }
         }
 
@@ -386,7 +386,7 @@ namespace ModMiner
             }
             catch (Exception exc)
             {
-                ModAPI.Log.Write($"[{ModName}.{ModName}:{nameof(OnClickGetIronButton)}] throws exception: {exc.Message}");
+                ModAPI.Log.Write($"[{ModName}:{nameof(OnClickGetIronButton)}] throws exception:\n{exc.Message}");
             }
         }
 
@@ -403,7 +403,7 @@ namespace ModMiner
             }
             catch (Exception exc)
             {
-                ModAPI.Log.Write($"[{ModName}.{ModName}:{nameof(AddMoneyBagToInventory)}] throws exception: {exc.Message}");
+                ModAPI.Log.Write($"[{ModName}:{nameof(AddMoneyBagToInventory)}] throws exception:\n{exc.Message}");
             }
         }
 
@@ -420,7 +420,7 @@ namespace ModMiner
             }
             catch (Exception exc)
             {
-                ModAPI.Log.Write($"[{ModName}.{ModName}:{nameof(AddIronToInventory)}] throws exception: {exc.Message}");
+                ModAPI.Log.Write($"[{ModName}:{nameof(AddIronToInventory)}] throws exception:\n{exc.Message}");
             }
         }
 
@@ -437,7 +437,7 @@ namespace ModMiner
             }
             catch (Exception exc)
             {
-                ModAPI.Log.Write($"[{ModName}.{ModName}:{nameof(AddObsidianToInventory)}] throws exception: {exc.Message}");
+                ModAPI.Log.Write($"[{ModName}:{nameof(AddObsidianToInventory)}] throws exception:\n{exc.Message}");
             }
         }
 
@@ -454,7 +454,7 @@ namespace ModMiner
             }
             catch (Exception exc)
             {
-                ModAPI.Log.Write($"[{ModName}.{ModName}:{nameof(AddStoneToInventory)}] throws exception: {exc.Message}");
+                ModAPI.Log.Write($"[{ModName}:{nameof(AddStoneToInventory)}] throws exception:\n{exc.Message}");
             }
         }
 
@@ -471,7 +471,7 @@ namespace ModMiner
             }
             catch (Exception exc)
             {
-                ModAPI.Log.Write($"[{ModName}.{ModName}:{nameof(AddCharcoalToInventory)}] throws exception: {exc.Message}");
+                ModAPI.Log.Write($"[{ModName}:{nameof(AddCharcoalToInventory)}] throws exception:\n{exc.Message}");
             }
         }
     }
