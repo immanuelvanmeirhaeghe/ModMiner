@@ -192,6 +192,9 @@ namespace ModMiner
 
         private void InitModMinerScreen(int windowID)
         {
+            ModScreenStartPositionX = ModMinerScreen.x;
+            ModScreenStartPositionY = ModMinerScreen.y;
+
             using (var modContentScope = new GUILayout.VerticalScope(
                                                                                             GUI.skin.box,
                                                                                             GUILayout.ExpandWidth(true),
@@ -201,7 +204,7 @@ namespace ModMiner
                                                                                             GUILayout.MinHeight(ModScreenMinHeight),
                                                                                             GUILayout.MaxHeight(ModScreenMaxHeight)))
             {
-                ScreenMenuBox();
+                ScreenMenuBox(windowID);
                 if (!IsMinimized)
                 {
                     OresBox();
@@ -291,10 +294,9 @@ namespace ModMiner
             }
         }
 
-        private void ScreenMenuBox()
+        private void ScreenMenuBox(int wid)
         {
-            ModScreenStartPositionX = ModMinerScreen.x;
-            ModScreenStartPositionY = ModMinerScreen.y;
+            ScalingWindowButton(wid);
 
             if (GUI.Button(new Rect(ModScreenTotalWidth - 40f, 0f, 20f, 20f), "-", GUI.skin.button))
             {
@@ -304,6 +306,27 @@ namespace ModMiner
             if (GUI.Button(new Rect(ModScreenTotalWidth - 20f, 0f, 20f, 20f), "X", GUI.skin.button))
             {
                 CloseWindow();
+            }
+        }
+
+        private void ScalingWindowButton(int windowID)
+        {
+            bool scaling = false;
+            GUI.Box(new Rect(ModScreenTotalWidth - 60f, 0f, 20f, 20f), "<>", GUI.skin.button);
+            if (UnityEngine.Event.current.type == EventType.MouseUp)
+            {
+                scaling = false;
+            }
+            else if (UnityEngine.Event.current.type == EventType.MouseDown &&
+                     GUILayoutUtility.GetLastRect().Contains(UnityEngine.Event.current.mousePosition))
+            {
+                scaling = true;
+            }
+
+            if (scaling)
+            {
+                ModMinerScreen = new Rect(ModMinerScreen.x, ModMinerScreen.y,
+                    ModMinerScreen.width + UnityEngine.Event.current.delta.x, ModMinerScreen.height + UnityEngine.Event.current.delta.y);
             }
         }
 
