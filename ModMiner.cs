@@ -31,6 +31,7 @@ namespace ModMiner
         private static float ModScreenStartPositionX { get; set; } = (Screen.width - ModScreenMaxWidth) % ModScreenTotalWidth;
         private static float ModScreenStartPositionY { get; set; } = (Screen.height - ModScreenMaxHeight) % ModScreenTotalHeight;
         private static bool IsMinimized { get; set; } = false;
+        private static bool IsScaling { get; set; } = false;
         private bool ShowUI = false;
 
         public static List<ItemID> MiningItemIDs { get; set; }
@@ -179,7 +180,19 @@ namespace ModMiner
         private void InitWindow()
         {
             int wid = GetHashCode();
-            ModMinerScreen = GUILayout.Window(wid, ModMinerScreen, InitModMinerScreen, $"{ModName}", GUI.skin.window);
+            ModMinerScreen = GUILayout.Window(
+                                                                                        wid,
+                                                                                        ModMinerScreen,
+                                                                                        InitModMinerScreen,
+                                                                                        ModName,
+                                                                                        GUI.skin.window,
+                                                                                        GUILayout.ExpandWidth(true),
+                                                                                        GUILayout.MinWidth(ModScreenMinWidth),
+                                                                                        GUILayout.MaxWidth(ModScreenMaxWidth),
+                                                                                        GUILayout.ExpandHeight(true),
+                                                                                        GUILayout.MinHeight(ModScreenMinHeight),
+                                                                                        GUILayout.MaxHeight(ModScreenMaxHeight)
+                                                                                    );
         }
 
         private void InitData()
@@ -195,14 +208,7 @@ namespace ModMiner
             ModScreenStartPositionX = ModMinerScreen.x;
             ModScreenStartPositionY = ModMinerScreen.y;
 
-            using (var modContentScope = new GUILayout.VerticalScope(
-                                                                                            GUI.skin.box,
-                                                                                            GUILayout.ExpandWidth(true),
-                                                                                            GUILayout.MinWidth(ModScreenMinWidth),
-                                                                                            GUILayout.MaxWidth(ModScreenMaxWidth),
-                                                                                            GUILayout.ExpandHeight(true),
-                                                                                            GUILayout.MinHeight(ModScreenMinHeight),
-                                                                                            GUILayout.MaxHeight(ModScreenMaxHeight)))
+            using (var modContentScope = new GUILayout.VerticalScope(GUI.skin.box))
             {
                 ScreenMenuBox(windowID);
                 if (!IsMinimized)
@@ -297,36 +303,41 @@ namespace ModMiner
         private void ScreenMenuBox(int wid)
         {
             ScalingWindowButton(wid);
+            CollapseWindowButton();
+            CloseWindowButton();
+        }
 
-            if (GUI.Button(new Rect(ModScreenTotalWidth - 40f, 0f, 20f, 20f), "-", GUI.skin.button))
-            {
-                CollapseWindow();
-            }
-
-            if (GUI.Button(new Rect(ModScreenTotalWidth - 20f, 0f, 20f, 20f), "X", GUI.skin.button))
+        private void CloseWindowButton()
+        {
+            if (GUI.Button(new Rect(ModMinerScreen.width - 20f, 0f, 20f, 20f), "X", GUI.skin.button))
             {
                 CloseWindow();
             }
         }
 
+        private void CollapseWindowButton()
+        {
+            if (GUI.Button(new Rect(ModMinerScreen.width - 40f, 0f, 20f, 20f), "-", GUI.skin.button))
+            {
+                CollapseWindow();
+            }
+        }
+
         private void ScalingWindowButton(int windowID)
         {
-            bool scaling = false;
-            GUI.Box(new Rect(ModScreenTotalWidth - 60f, 0f, 20f, 20f), "<>", GUI.skin.button);
+            GUI.Box(new Rect(ModMinerScreen.width - 60f, 0f, 20f, 20f), "<>", GUI.skin.button);
             if (UnityEngine.Event.current.type == EventType.MouseUp)
             {
-                scaling = false;
+                IsScaling = false;
             }
-            else if (UnityEngine.Event.current.type == EventType.MouseDown &&
-                     GUILayoutUtility.GetLastRect().Contains(UnityEngine.Event.current.mousePosition))
+            else if (UnityEngine.Event.current.type == EventType.MouseDown && GUILayoutUtility.GetLastRect().Contains(UnityEngine.Event.current.mousePosition))
             {
-                scaling = true;
+                IsScaling = true;
             }
 
-            if (scaling)
+            if (IsScaling)
             {
-                ModMinerScreen = new Rect(ModMinerScreen.x, ModMinerScreen.y,
-                    ModMinerScreen.width + UnityEngine.Event.current.delta.x, ModMinerScreen.height + UnityEngine.Event.current.delta.y);
+                ModMinerScreen = new Rect(ModMinerScreen.x, ModMinerScreen.y, ModMinerScreen.width + UnityEngine.Event.current.delta.x, ModMinerScreen.height + UnityEngine.Event.current.delta.y);
             }
         }
 
