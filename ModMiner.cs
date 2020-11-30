@@ -24,7 +24,7 @@ namespace ModMiner
         private static readonly string ModName = nameof(ModMiner);
         private static readonly float ModScreenTotalWidth = 500f;
         private static readonly float ModScreenTotalHeight = 150f;
-        private static readonly float ModScreenMinWidth = 50f;
+        private static readonly float ModScreenMinWidth = 450f;
         private static readonly float ModScreenMaxWidth = 550f;
         private static readonly float ModScreenMinHeight = 50f;
         private static readonly float ModScreenMaxHeight = 200f;
@@ -56,13 +56,13 @@ namespace ModMiner
         public static string HUDBigInfoMessage(string message, MessageType messageType, Color? headcolor = null)
             => $"<color=#{ (headcolor != null ? ColorUtility.ToHtmlStringRGBA(headcolor.Value) : ColorUtility.ToHtmlStringRGBA(Color.red))  }>{messageType}</color>\n{message}";
 
-        private static string CountStack = "1";
-        private static string CountCharcoal = "1";
-        private static string CountStone = "1";
-        private static string CountObsidian = "1";
-        private static string CountIron = "1";
+        public static string CountStack { get; set; } = "1";
+        public static string CountCharcoal { get; set; } = "1";
+        public static string CountStone { get; set; } = "1";
+        public static string CountObsidian { get; set; } = "1";
+        public static string CountIron { get; set; } = "1";
 
-        public bool IsModActiveForMultiplayer { get; private set; }
+        public bool IsModActiveForMultiplayer { get; private set; } = false;
         public bool IsModActiveForSingleplayer => ReplTools.AmIMaster();
 
         public void Start()
@@ -192,10 +192,7 @@ namespace ModMiner
 
         private void InitModMinerScreen(int windowID)
         {
-            ScreenMenuBox();
-            if (!IsMinimized)
-            {
-                using (var modContentScope = new GUILayout.VerticalScope(
+            using (var modContentScope = new GUILayout.VerticalScope(
                                                                                             GUI.skin.box,
                                                                                             GUILayout.ExpandWidth(true),
                                                                                             GUILayout.MinWidth(ModScreenMinWidth),
@@ -203,6 +200,9 @@ namespace ModMiner
                                                                                             GUILayout.ExpandHeight(true),
                                                                                             GUILayout.MinHeight(ModScreenMinHeight),
                                                                                             GUILayout.MaxHeight(ModScreenMaxHeight)))
+            {
+                ScreenMenuBox();
+                if (!IsMinimized)
                 {
                     OresBox();
                     GoldBox();
@@ -306,16 +306,17 @@ namespace ModMiner
 
         private void CollapseWindow()
         {
+            ModScreenStartPositionX = ModMinerScreen.x;
+            ModScreenStartPositionY = ModMinerScreen.y;
+
             if (!IsMinimized)
             {
-                ModScreenStartPositionX = ModMinerScreen.x;
-                ModScreenStartPositionY = ModMinerScreen.y;
-                ModMinerScreen.Set(ModMinerScreen.x, ModMinerScreen.y, ModScreenTotalWidth, ModScreenMinHeight);
+                ModMinerScreen = new Rect(ModScreenStartPositionX, ModScreenStartPositionY, ModScreenTotalWidth, ModScreenMinHeight);
                 IsMinimized = true;
             }
             else
             {
-                ModMinerScreen.Set(ModScreenStartPositionX, ModScreenStartPositionY, ModScreenTotalWidth, ModScreenTotalHeight);
+                ModMinerScreen = new Rect(ModScreenStartPositionX, ModScreenStartPositionY, ModScreenTotalWidth, ModScreenTotalHeight);
                 IsMinimized = false;
             }
             InitWindow();
