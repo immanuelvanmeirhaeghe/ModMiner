@@ -293,12 +293,15 @@ namespace ModMiner
 
         private void ScreenMenuBox()
         {
-            if (GUI.Button(new Rect(ModMinerScreen.width - 40f, 0f, 20f, 20f), "-", GUI.skin.button))
+            ModScreenStartPositionX = ModMinerScreen.x;
+            ModScreenStartPositionY = ModMinerScreen.y;
+
+            if (GUI.Button(new Rect(ModScreenTotalWidth - 40f, 0f, 20f, 20f), "-", GUI.skin.button))
             {
                 CollapseWindow();
             }
 
-            if (GUI.Button(new Rect(ModMinerScreen.width - 20f, 0f, 20f, 20f), "X", GUI.skin.button))
+            if (GUI.Button(new Rect(ModScreenTotalWidth - 20f, 0f, 20f, 20f), "X", GUI.skin.button))
             {
                 CloseWindow();
             }
@@ -306,9 +309,6 @@ namespace ModMiner
 
         private void CollapseWindow()
         {
-            ModScreenStartPositionX = ModMinerScreen.x;
-            ModScreenStartPositionY = ModMinerScreen.y;
-
             if (!IsMinimized)
             {
                 ModMinerScreen = new Rect(ModScreenStartPositionX, ModScreenStartPositionY, ModScreenTotalWidth, ModScreenMinHeight);
