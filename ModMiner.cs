@@ -192,17 +192,17 @@ namespace ModMiner
 
         private void InitModMinerScreen(int windowID)
         {
-            using (var modContentScope = new GUILayout.VerticalScope(
-                                                                                                        GUI.skin.box,
-                                                                                                        GUILayout.ExpandWidth(true),
-                                                                                                        GUILayout.MinWidth(ModScreenMinWidth),
-                                                                                                        GUILayout.MaxWidth(ModScreenMaxWidth),
-                                                                                                        GUILayout.ExpandHeight(true),
-                                                                                                        GUILayout.MinHeight(ModScreenMinHeight),
-                                                                                                        GUILayout.MaxHeight(ModScreenMaxHeight)))
+            ScreenMenuBox();
+            if (!IsMinimized)
             {
-                ScreenMenuBox();
-                if (!IsMinimized)
+                using (var modContentScope = new GUILayout.VerticalScope(
+                                                                                            GUI.skin.box,
+                                                                                            GUILayout.ExpandWidth(true),
+                                                                                            GUILayout.MinWidth(ModScreenMinWidth),
+                                                                                            GUILayout.MaxWidth(ModScreenMaxWidth),
+                                                                                            GUILayout.ExpandHeight(true),
+                                                                                            GUILayout.MinHeight(ModScreenMinHeight),
+                                                                                            GUILayout.MaxHeight(ModScreenMaxHeight)))
                 {
                     OresBox();
                     GoldBox();
@@ -310,7 +310,7 @@ namespace ModMiner
             {
                 ModScreenStartPositionX = ModMinerScreen.x;
                 ModScreenStartPositionY = ModMinerScreen.y;
-                ModMinerScreen.Set(ModMinerScreen.x, ModMinerScreen.y, ModScreenMinWidth, ModScreenMinHeight);
+                ModMinerScreen.Set(ModMinerScreen.x, ModMinerScreen.y, ModScreenTotalWidth, ModScreenMinHeight);
                 IsMinimized = true;
             }
             else
@@ -331,10 +331,14 @@ namespace ModMiner
         {
             try
             {
-                AddCharcoalToInventory(Int32.Parse(CountStack));
-                AddStoneToInventory(Int32.Parse(CountStack));
-                AddObsidianToInventory(Int32.Parse(CountStack));
-                AddIronToInventory(Int32.Parse(CountStack));
+                int countStack = ValidMinMax(CountStack);
+                if (countStack > 0)
+                {
+                    AddCharcoalToInventory(countStack);
+                    AddStoneToInventory(countStack);
+                    AddObsidianToInventory(countStack);
+                    AddIronToInventory(countStack);
+                }
             }
             catch (Exception exc)
             {
@@ -346,7 +350,11 @@ namespace ModMiner
         {
             try
             {
-                AddMoneyBagToInventory();
+                int countMoneybag = ValidMinMax("1");
+                if (countMoneybag > 0)
+                {
+                    AddMoneyBagToInventory(countMoneybag);
+                }
             }
             catch (Exception exc)
             {
@@ -358,7 +366,11 @@ namespace ModMiner
         {
             try
             {
-                AddCharcoalToInventory(Int32.Parse(CountCharcoal));
+                int countCharcoal = ValidMinMax(CountCharcoal);
+                if (countCharcoal > 0)
+                {
+                    AddCharcoalToInventory(countCharcoal);
+                }
             }
             catch (Exception exc)
             {
@@ -370,7 +382,11 @@ namespace ModMiner
         {
             try
             {
-                AddStoneToInventory(Int32.Parse(CountStone));
+                int countStone = ValidMinMax(CountStone);
+                if (countStone > 0)
+                {
+                    AddStoneToInventory(countStone);
+                }
             }
             catch (Exception exc)
             {
@@ -382,7 +398,11 @@ namespace ModMiner
         {
             try
             {
-                AddObsidianToInventory(Int32.Parse(CountObsidian));
+                int countObsidian = ValidMinMax(CountObsidian);
+                if (countObsidian > 0)
+                {
+                    AddObsidianToInventory(countObsidian);
+                }
             }
             catch (Exception exc)
             {
@@ -394,11 +414,36 @@ namespace ModMiner
         {
             try
             {
-                AddIronToInventory(Int32.Parse(CountIron));
+                int countIron = ValidMinMax(CountIron);
+                if (countIron > 0)
+                {
+                    AddIronToInventory(countIron);
+                }
             }
             catch (Exception exc)
             {
                 ModAPI.Log.Write($"[{ModName}:{nameof(OnClickGetIronButton)}] throws exception:\n{exc.Message}");
+            }
+        }
+
+        private int ValidMinMax(string countToValidate)
+        {
+            if (int.TryParse(countToValidate, out int count))
+            {
+                if (count <= 0)
+                {
+                    count = 1;
+                }
+                if (count > 5)
+                {
+                    count = 5;
+                }
+                return count;
+            }
+            else
+            {
+                ShowHUDBigInfo(HUDBigInfoMessage($"Invalid input {countToValidate}: please input numbers only - min. 1 and max. 5", MessageType.Error, Color.red));
+                return -1;
             }
         }
 
