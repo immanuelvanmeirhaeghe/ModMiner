@@ -1,26 +1,24 @@
 ﻿using Enums;
+using ModMiner.Enums;
 using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Xml;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace ModMiner
 {
-    public enum MessageType
-    {
-        Info,
-        Warning,
-        Error
-    }
-
     /// <summary>
     /// ModMiner is a mod for Green Hell
     /// that allows a player to spawn charcoal, stones, obsidian, iron and gold sacks.
     /// The ores will be added to the player inventory.
-	/// Enable the mod UI by pressing Home.
+    /// Press Keypad7 (default) or the key configurable in ModAPI to open the main mod screen.
     /// </summary>
     public class ModMiner : MonoBehaviour
     {
         private static ModMiner Instance;
+
         private static readonly string ModName = nameof(ModMiner);
         private static readonly float ModScreenTotalWidth = 500f;
         private static readonly float ModScreenTotalHeight = 150f;
@@ -28,11 +26,13 @@ namespace ModMiner
         private static readonly float ModScreenMaxWidth = 550f;
         private static readonly float ModScreenMinHeight = 50f;
         private static readonly float ModScreenMaxHeight = 200f;
-        private static float ModScreenStartPositionX { get; set; } = (Screen.width - ModScreenMaxWidth) % ModScreenTotalWidth;
-        private static float ModScreenStartPositionY { get; set; } = (Screen.height - ModScreenMaxHeight) % ModScreenTotalHeight;
+        private static float ModScreenStartPositionX { get; set; } = Screen.width / 7f;
+        private static float ModScreenStartPositionY { get; set; } = 0f;
         private static bool IsMinimized { get; set; } = false;
-        private static bool IsScaling { get; set; } = false;
         private bool ShowUI = false;
+        private Color DefaultGuiColor = GUI.color;
+
+        private static bool IsScaling { get; set; } = false;
 
         public static List<ItemID> MiningItemIDs { get; set; }
             = new List<ItemID> {
@@ -42,18 +42,32 @@ namespace ModMiner
                 ItemID.iron_ore_stone,
                 ItemID.Obsidian_Stone,
                 ItemID.Stone,
-                ItemID.Charcoal
+                ItemID.Charcoal,
+                ItemID.Campfire_ash
             };
 
-        private bool MiningIsUnlocked = false;
+        public bool MiningUnlocked { get; set; } = false;
         public static Rect ModMinerScreen = new Rect(ModScreenStartPositionX, ModScreenStartPositionY, ModScreenTotalWidth, ModScreenTotalHeight);
 
         private static ItemsManager LocalItemsManager;
+        private static CursorManager LocalCursorManager;
         private static HUDManager LocalHUDManager;
         private static Player LocalPlayer;
 
-        public static string AddedToInventoryMessage(int count, ItemInfo itemInfo) => $"Added {count} x {itemInfo.GetNameToDisplayLocalized()} to inventory.";
-        public static string PermissionChangedMessage(string permission) => $"Permission to use mods and cheats in multiplayer was {permission}!";
+        private void HandleException(Exception exc, string methodName)
+        {
+            string info = $"[{ModName}:{methodName}] throws exception:\n{exc.Message}";
+            ModAPI.Log.Write(info);
+            ShowHUDBigInfo(HUDBigInfoMessage(info, MessageType.Error, Color.red));
+        }
+        public static string AlreadyUnlockedMining()
+            => $"All mining items were already unlocked!";
+        public static string OnlyForSinglePlayerOrHostMessage()
+            => $"Only available for single player or when host. Host can activate using ModManager.";
+        public static string AddedToInventoryMessage(int count, ItemInfo itemInfo)
+            => $"Added {count} x {itemInfo.GetNameToDisplayLocalized()} to inventory.";
+        public static string PermissionChangedMessage(string permission, string reason)
+            => $"Permission to use mods and cheats in multiplayer was {permission} because {reason}.";
         public static string HUDBigInfoMessage(string message, MessageType messageType, Color? headcolor = null)
             => $"<color=#{ (headcolor != null ? ColorUtility.ToHtmlStringRGBA(headcolor.Value) : ColorUtility.ToHtmlStringRGBA(Color.red))  }>{messageType}</color>\n{message}";
 
@@ -65,32 +79,6 @@ namespace ModMiner
 
         public bool IsModActiveForMultiplayer { get; private set; } = false;
         public bool IsModActiveForSingleplayer => ReplTools.AmIMaster();
-
-        public void Start()
-        {
-            ModManager.ModManager.onPermissionValueChanged += ModManager_onPermissionValueChanged;
-        }
-
-        private void ModManager_onPermissionValueChanged(bool optionValue)
-        {
-            IsModActiveForMultiplayer = optionValue;
-            ShowHUDBigInfo(
-                          (optionValue ?
-                            HUDBigInfoMessage(PermissionChangedMessage($"granted"), MessageType.Info, Color.green)
-                            : HUDBigInfoMessage(PermissionChangedMessage($"revoked"), MessageType.Info, Color.yellow))
-                            );
-        }
-
-        public ModMiner()
-        {
-            useGUILayout = true;
-            Instance = this;
-        }
-
-        public static ModMiner Get()
-        {
-            return Instance;
-        }
 
         public void ShowHUDBigInfo(string text)
         {
@@ -109,6 +97,85 @@ namespace ModMiner
             hudBigInfo.Show(true);
         }
 
+        public void ShowHUDInfoLog(string itemID, string localizedTextKey)
+        {
+            var localization = GreenHellGame.Instance.GetLocalization();
+            HUDMessages hUDMessages = (HUDMessages)LocalHUDManager.GetHUD(typeof(HUDMessages));
+            hUDMessages.AddMessage(
+                $"{localization.Get(localizedTextKey)}  {localization.Get(itemID)}"
+                );
+        }
+
+        private static readonly string RuntimeConfigurationFile = Path.Combine(Application.dataPath.Replace("GH_Data", "Mods"), "RuntimeConfiguration.xml");
+        private static KeyCode ModKeybindingId { get; set; } = KeyCode.Keypad7;
+        private KeyCode GetConfigurableKey(string buttonId)
+        {
+            KeyCode configuredKeyCode = default;
+            string configuredKeybinding = string.Empty;
+
+            try
+            {
+                if (File.Exists(RuntimeConfigurationFile))
+                {
+                    using (var xmlReader = XmlReader.Create(new StreamReader(RuntimeConfigurationFile)))
+                    {
+                        while (xmlReader.Read())
+                        {
+                            if (xmlReader["ID"] == ModName)
+                            {
+                                if (xmlReader.ReadToFollowing(nameof(Button)) && xmlReader["ID"] == buttonId)
+                                {
+                                    configuredKeybinding = xmlReader.ReadElementContentAsString();
+                                }
+                            }
+                        }
+                    }
+                }
+
+                configuredKeybinding = configuredKeybinding?.Replace("NumPad", "Keypad").Replace("Oem", "");
+
+                configuredKeyCode = (KeyCode)(!string.IsNullOrEmpty(configuredKeybinding)
+                                                            ? Enum.Parse(typeof(KeyCode), configuredKeybinding)
+                                                            : GetType()?.GetProperty(buttonId)?.GetValue(this));
+                return configuredKeyCode;
+            }
+            catch (Exception exc)
+            {
+                HandleException(exc, nameof(GetConfigurableKey));
+                configuredKeyCode = (KeyCode)(GetType()?.GetProperty(buttonId)?.GetValue(this));
+                return configuredKeyCode;
+            }
+        }
+
+        public void Start()
+        {
+            ModManager.ModManager.onPermissionValueChanged += ModManager_onPermissionValueChanged;
+            ModKeybindingId = GetConfigurableKey(nameof(ModKeybindingId));
+        }
+
+        private void ModManager_onPermissionValueChanged(bool optionValue)
+        {
+            string reason = optionValue ? "the game host allowed usage" : "the game host did not allow usage";
+            IsModActiveForMultiplayer = optionValue;
+
+            ShowHUDBigInfo(
+                          optionValue ?
+                            HUDBigInfoMessage(PermissionChangedMessage($"granted", $"{reason}"), MessageType.Info, Color.green)
+                            : HUDBigInfoMessage(PermissionChangedMessage($"revoked", $"{reason}"), MessageType.Info, Color.yellow)
+                            );
+        }
+
+        public ModMiner()
+        {
+            useGUILayout = true;
+            Instance = this;
+        }
+
+        public static ModMiner Get()
+        {
+            return Instance;
+        }
+
         private void InitSkinUI()
         {
             GUI.skin = ModAPI.Interface.Skin;
@@ -116,7 +183,7 @@ namespace ModMiner
 
         private void EnableCursor(bool blockPlayer = false)
         {
-            CursorManager.Get().ShowCursor(blockPlayer, false);
+           LocalCursorManager.ShowCursor(blockPlayer, false);
 
             if (blockPlayer)
             {
@@ -134,7 +201,7 @@ namespace ModMiner
 
         private void Update()
         {
-            if (Input.GetKeyDown(KeyCode.Home))
+            if (Input.GetKeyDown(ModKeybindingId))
             {
                 if (!ShowUI)
                 {
@@ -166,14 +233,14 @@ namespace ModMiner
 
         private void UnlockMining()
         {
-            if (!MiningIsUnlocked)
+            if (!MiningUnlocked)
             {
                 foreach (ItemID itemIdToUnlock in MiningItemIDs)
                 {
                     LocalItemsManager.UnlockItemInNotepad(itemIdToUnlock);
                     LocalItemsManager.UnlockItemInfo(itemIdToUnlock.ToString());
                 }
-                MiningIsUnlocked = true;
+                MiningUnlocked = true;
             }
         }
 
@@ -200,6 +267,7 @@ namespace ModMiner
             LocalItemsManager = ItemsManager.Get();
             LocalPlayer = Player.Get();
             LocalHUDManager = HUDManager.Get();
+            LocalCursorManager = CursorManager.Get();
             UnlockMining();
         }
 
@@ -210,9 +278,91 @@ namespace ModMiner
 
             using (var modContentScope = new GUILayout.VerticalScope(GUI.skin.box))
             {
-                ScreenMenuBox(windowID);
+                ScreenMenuBox();
                 if (!IsMinimized)
                 {
+                    ModOptionsBox();
+                    UnlockMiningItemsBox();
+                }
+            }
+            GUI.DragWindow(new Rect(0f, 0f, 10000f, 10000f));
+        }
+
+        private void ModOptionsBox()
+        {
+            if (IsModActiveForSingleplayer || IsModActiveForMultiplayer)
+            {
+                using (var optionsScope = new GUILayout.VerticalScope(GUI.skin.box))
+                {
+                    GUILayout.Label($"To toggle the mod main UI, press [{ModKeybindingId}]", GUI.skin.label);
+                    MultiplayerOptionBox();
+                }
+            }
+            else
+            {
+                OnlyForSingleplayerOrWhenHostBox();
+            }
+        }
+
+        private void OnlyForSingleplayerOrWhenHostBox()
+        {
+            using (var infoScope = new GUILayout.HorizontalScope(GUI.skin.box))
+            {
+                GUI.color = Color.yellow;
+                GUILayout.Label(OnlyForSinglePlayerOrHostMessage(), GUI.skin.label);
+            }
+        }
+
+        private void MultiplayerOptionBox()
+        {
+            try
+            {
+                using (var multiplayeroptionsScope = new GUILayout.VerticalScope(GUI.skin.box))
+                {
+                    GUILayout.Label("Multiplayer options: ", GUI.skin.label);
+                    string multiplayerOptionMessage = string.Empty;
+                    if (IsModActiveForSingleplayer || IsModActiveForMultiplayer)
+                    {
+                        GUI.color = Color.green;
+                        if (IsModActiveForSingleplayer)
+                        {
+                            multiplayerOptionMessage = $"you are the game host";
+                        }
+                        if (IsModActiveForMultiplayer)
+                        {
+                            multiplayerOptionMessage = $"the game host allowed usage";
+                        }
+                        _ = GUILayout.Toggle(true, PermissionChangedMessage($"granted", multiplayerOptionMessage), GUI.skin.toggle);
+                    }
+                    else
+                    {
+                        GUI.color = Color.yellow;
+                        if (!IsModActiveForSingleplayer)
+                        {
+                            multiplayerOptionMessage = $"you are not the game host";
+                        }
+                        if (!IsModActiveForMultiplayer)
+                        {
+                            multiplayerOptionMessage = $"the game host did not allow usage";
+                        }
+                        _ = GUILayout.Toggle(false, PermissionChangedMessage($"revoked", $"{multiplayerOptionMessage}"), GUI.skin.toggle);
+                    }
+                }
+            }
+            catch (Exception exc)
+            {
+                HandleException(exc, nameof(MultiplayerOptionBox));
+            }
+        }
+
+        private void UnlockMiningItemsBox()
+        {
+            if (IsModActiveForSingleplayer || IsModActiveForMultiplayer)
+            {
+                using (var miningritemsScope = new GUILayout.VerticalScope(GUI.skin.box))
+                {
+                    GUI.color = DefaultGuiColor;
+                    GUILayout.Label($"Mining tools and ores are unlocked: ", GUI.skin.label);
                     OresBox();
                     GoldBox();
                     CharcoalBox();
@@ -221,7 +371,10 @@ namespace ModMiner
                     IronBox();
                 }
             }
-            GUI.DragWindow(new Rect(0f, 0f, 10000f, 10000f));
+            else
+            {
+                OnlyForSingleplayerOrWhenHostBox();
+            }
         }
 
         private void ObsidianBox()
@@ -300,44 +453,16 @@ namespace ModMiner
             }
         }
 
-        private void ScreenMenuBox(int wid)
-        {
-            ScalingWindowButton(wid);
-            CollapseWindowButton();
-            CloseWindowButton();
-        }
-
-        private void CloseWindowButton()
-        {
-            if (GUI.Button(new Rect(ModMinerScreen.width - 20f, 0f, 20f, 20f), "X", GUI.skin.button))
-            {
-                CloseWindow();
-            }
-        }
-
-        private void CollapseWindowButton()
+        private void ScreenMenuBox()
         {
             if (GUI.Button(new Rect(ModMinerScreen.width - 40f, 0f, 20f, 20f), "-", GUI.skin.button))
             {
                 CollapseWindow();
             }
-        }
 
-        private void ScalingWindowButton(int windowID)
-        {
-            GUI.Box(new Rect(ModMinerScreen.width - 60f, 0f, 20f, 20f), "<>", GUI.skin.button);
-            if (UnityEngine.Event.current.type == EventType.MouseUp)
+            if (GUI.Button(new Rect(ModMinerScreen.width - 20f, 0f, 20f, 20f), "X", GUI.skin.button))
             {
-                IsScaling = false;
-            }
-            else if (UnityEngine.Event.current.type == EventType.MouseDown && GUILayoutUtility.GetLastRect().Contains(UnityEngine.Event.current.mousePosition))
-            {
-                IsScaling = true;
-            }
-
-            if (IsScaling)
-            {
-                ModMinerScreen = new Rect(ModMinerScreen.x, ModMinerScreen.y, ModMinerScreen.width + UnityEngine.Event.current.delta.x, ModMinerScreen.height + UnityEngine.Event.current.delta.y);
+                CloseWindow();
             }
         }
 
@@ -377,7 +502,7 @@ namespace ModMiner
             }
             catch (Exception exc)
             {
-                ModAPI.Log.Write($"[{ModName}:{nameof(OnClickGetStackButton)}] throws exception: \n{exc.Message}");
+                HandleException(exc, nameof(OnClickGetStackButton));
             }
         }
 
@@ -393,7 +518,7 @@ namespace ModMiner
             }
             catch (Exception exc)
             {
-                ModAPI.Log.Write($"[{ModName}:{nameof(OnClickGetGoldButton)}] throws exception:\n{exc.Message}");
+                HandleException(exc, nameof(OnClickGetGoldButton));
             }
         }
 
@@ -409,7 +534,7 @@ namespace ModMiner
             }
             catch (Exception exc)
             {
-                ModAPI.Log.Write($"[{ModName}:{nameof(OnClickGetCharcoalButton)}] throws exception:\n{exc.Message}");
+                HandleException(exc, nameof(OnClickGetCharcoalButton));
             }
         }
 
@@ -425,7 +550,7 @@ namespace ModMiner
             }
             catch (Exception exc)
             {
-                ModAPI.Log.Write($"[{ModName}:{nameof(OnClickGetStoneButton)}] throws exception:\n{exc.Message}");
+                HandleException(exc, nameof(OnClickGetStoneButton));
             }
         }
 
@@ -441,7 +566,7 @@ namespace ModMiner
             }
             catch (Exception exc)
             {
-                ModAPI.Log.Write($"[{ModName}:{nameof(OnClickGetObsidianButton)}] throws exception:\n{exc.Message}");
+                HandleException(exc, nameof(OnClickGetObsidianButton));
             }
         }
 
@@ -457,7 +582,7 @@ namespace ModMiner
             }
             catch (Exception exc)
             {
-                ModAPI.Log.Write($"[{ModName}:{nameof(OnClickGetIronButton)}] throws exception:\n{exc.Message}");
+                HandleException(exc, nameof(OnClickGetIronButton));
             }
         }
 
@@ -495,7 +620,7 @@ namespace ModMiner
             }
             catch (Exception exc)
             {
-                ModAPI.Log.Write($"[{ModName}:{nameof(AddMoneyBagToInventory)}] throws exception:\n{exc.Message}");
+                HandleException(exc, nameof(AddMoneyBagToInventory));
             }
         }
 
@@ -512,7 +637,7 @@ namespace ModMiner
             }
             catch (Exception exc)
             {
-                ModAPI.Log.Write($"[{ModName}:{nameof(AddIronToInventory)}] throws exception:\n{exc.Message}");
+                HandleException(exc, nameof(AddIronToInventory));
             }
         }
 
@@ -529,7 +654,7 @@ namespace ModMiner
             }
             catch (Exception exc)
             {
-                ModAPI.Log.Write($"[{ModName}:{nameof(AddObsidianToInventory)}] throws exception:\n{exc.Message}");
+                HandleException(exc, nameof(AddObsidianToInventory));
             }
         }
 
@@ -546,7 +671,7 @@ namespace ModMiner
             }
             catch (Exception exc)
             {
-                ModAPI.Log.Write($"[{ModName}:{nameof(AddStoneToInventory)}] throws exception:\n{exc.Message}");
+                HandleException(exc, nameof(AddStoneToInventory));
             }
         }
 
@@ -563,7 +688,7 @@ namespace ModMiner
             }
             catch (Exception exc)
             {
-                ModAPI.Log.Write($"[{ModName}:{nameof(AddCharcoalToInventory)}] throws exception:\n{exc.Message}");
+                HandleException(exc, nameof(AddCharcoalToInventory));
             }
         }
     }
